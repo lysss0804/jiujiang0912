@@ -1,0 +1,839 @@
+{
+  "$defs": {
+    "AuditEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "agent_name": {
+          "title": "Agent Name",
+          "type": "string"
+        },
+        "status": {
+          "title": "Status",
+          "type": "string"
+        },
+        "detail": {
+          "title": "Detail",
+          "type": "string"
+        },
+        "timestamp": {
+          "title": "Timestamp",
+          "type": "string"
+        }
+      },
+      "required": [
+        "agent_name",
+        "status",
+        "detail",
+        "timestamp"
+      ],
+      "title": "AuditEntry",
+      "type": "object"
+    },
+    "CandidateAction": {
+      "additionalProperties": false,
+      "properties": {
+        "suggest_type": {
+          "enum": [
+            "rectify",
+            "observe",
+            "alert"
+          ],
+          "title": "Suggest Type",
+          "type": "string"
+        },
+        "suggest_content": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Suggest Content",
+          "type": "string"
+        },
+        "suggest_priority": {
+          "enum": [
+            "HIGH",
+            "MEDIUM",
+            "LOW"
+          ],
+          "title": "Suggest Priority",
+          "type": "string"
+        },
+        "execution_status": {
+          "const": "PENDING_HUMAN_REVIEW",
+          "default": "PENDING_HUMAN_REVIEW",
+          "title": "Execution Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "suggest_type",
+        "suggest_content",
+        "suggest_priority"
+      ],
+      "title": "CandidateAction",
+      "type": "object"
+    },
+    "ComparisonDimensionBaseline": {
+      "additionalProperties": false,
+      "description": "单个维度在同批供应商中的基线（中位数）。",
+      "properties": {
+        "dimension": {
+          "maxLength": 50,
+          "minLength": 1,
+          "title": "Dimension",
+          "type": "string"
+        },
+        "median_score": {
+          "minimum": 0.0,
+          "title": "Median Score",
+          "type": "number"
+        },
+        "median_event_count": {
+          "minimum": 0.0,
+          "title": "Median Event Count",
+          "type": "number"
+        }
+      },
+      "required": [
+        "dimension",
+        "median_score",
+        "median_event_count"
+      ],
+      "title": "ComparisonDimensionBaseline",
+      "type": "object"
+    },
+    "ComparisonRankItem": {
+      "additionalProperties": false,
+      "description": "单个供应商在横向对比中的分值与排名。",
+      "properties": {
+        "rank": {
+          "minimum": 1,
+          "title": "Rank",
+          "type": "integer"
+        },
+        "supplier_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Supplier Id",
+          "type": "string"
+        },
+        "supplier_name": {
+          "default": "",
+          "maxLength": 200,
+          "title": "Supplier Name",
+          "type": "string"
+        },
+        "importance_tier": {
+          "default": "一般",
+          "enum": [
+            "重要",
+            "一般"
+          ],
+          "title": "Importance Tier",
+          "type": "string"
+        },
+        "risk_level": {
+          "default": "GREEN",
+          "enum": [
+            "RED",
+            "YELLOW",
+            "GREEN"
+          ],
+          "title": "Risk Level",
+          "type": "string"
+        },
+        "score": {
+          "minimum": 0.0,
+          "title": "Score",
+          "type": "number"
+        },
+        "deviation": {
+          "default": 0.0,
+          "title": "Deviation",
+          "type": "number"
+        }
+      },
+      "required": [
+        "rank",
+        "supplier_id",
+        "score"
+      ],
+      "title": "ComparisonRankItem",
+      "type": "object"
+    },
+    "CrossSupplierComparison": {
+      "additionalProperties": false,
+      "description": "多供应商同期横向对比数据块（供后端生成横向对比报告）。",
+      "properties": {
+        "supplier_count": {
+          "minimum": 0,
+          "title": "Supplier Count",
+          "type": "integer"
+        },
+        "level_distribution": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "title": "Level Distribution",
+          "type": "object"
+        },
+        "dimension_baselines": {
+          "items": {
+            "$ref": "#/$defs/ComparisonDimensionBaseline"
+          },
+          "title": "Dimension Baselines",
+          "type": "array"
+        },
+        "rankings": {
+          "items": {
+            "$ref": "#/$defs/ComparisonRankItem"
+          },
+          "title": "Rankings",
+          "type": "array"
+        },
+        "median_score": {
+          "default": 0.0,
+          "minimum": 0.0,
+          "title": "Median Score",
+          "type": "number"
+        },
+        "note": {
+          "default": "",
+          "maxLength": 500,
+          "title": "Note",
+          "type": "string"
+        }
+      },
+      "required": [
+        "supplier_count"
+      ],
+      "title": "CrossSupplierComparison",
+      "type": "object"
+    },
+    "DispositionHint": {
+      "additionalProperties": false,
+      "description": "处置提示块。\n\n智能体只产出「提示」，不做任何自动处置，也不直接发送：\n- `delivery_audience`：建议分发对象（后端据此决定下发哪些报告）；\n- `disposition_state`：处置状态（正常复核 / 证据不足 / 待供应商重新申报）；\n- `can_redeclare`：是否允许供应商重新申报（门禁为确定性判定）。",
+      "properties": {
+        "delivery_audience": {
+          "items": {
+            "enum": [
+              "LEADERSHIP",
+              "MANAGER"
+            ],
+            "type": "string"
+          },
+          "title": "Delivery Audience",
+          "type": "array"
+        },
+        "disposition_state": {
+          "default": "PENDING_HUMAN_REVIEW",
+          "enum": [
+            "PENDING_HUMAN_REVIEW",
+            "EVIDENCE_INSUFFICIENT",
+            "AWAITING_SUPPLIER_REDECLARE"
+          ],
+          "title": "Disposition State",
+          "type": "string"
+        },
+        "can_redeclare": {
+          "default": false,
+          "title": "Can Redeclare",
+          "type": "boolean"
+        },
+        "reason": {
+          "default": "",
+          "maxLength": 500,
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "title": "DispositionHint",
+      "type": "object"
+    },
+    "EvidenceItem": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "supplier_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Supplier Id",
+          "type": "string"
+        },
+        "event_category": {
+          "maxLength": 50,
+          "minLength": 1,
+          "title": "Event Category",
+          "type": "string"
+        },
+        "event_subtype": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Event Subtype",
+          "type": "string"
+        },
+        "event_severity": {
+          "maximum": 5,
+          "minimum": 0,
+          "title": "Event Severity",
+          "type": "integer"
+        },
+        "event_week": {
+          "maximum": 52,
+          "minimum": 1,
+          "title": "Event Week",
+          "type": "integer"
+        },
+        "source_type": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Source Type",
+          "type": "string"
+        },
+        "readable_summary": {
+          "default": "",
+          "maxLength": 300,
+          "title": "Readable Summary",
+          "type": "string"
+        },
+        "mapped_dimension": {
+          "default": "",
+          "maxLength": 50,
+          "title": "Mapped Dimension",
+          "type": "string"
+        }
+      },
+      "required": [
+        "evidence_id",
+        "supplier_id",
+        "event_category",
+        "event_subtype",
+        "event_severity",
+        "event_week",
+        "source_type"
+      ],
+      "title": "EvidenceItem",
+      "type": "object"
+    },
+    "EvidenceResult": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "enum": [
+            "PASS",
+            "FAIL"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "evidence_items": {
+          "items": {
+            "$ref": "#/$defs/EvidenceItem"
+          },
+          "maxItems": 100,
+          "title": "Evidence Items",
+          "type": "array"
+        },
+        "by_dimension": {
+          "additionalProperties": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "title": "By Dimension",
+          "type": "object"
+        },
+        "reasons": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 20,
+          "title": "Reasons",
+          "type": "array"
+        },
+        "llm_status": {
+          "default": "DISABLED",
+          "title": "Llm Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "title": "EvidenceResult",
+      "type": "object"
+    },
+    "HitRule": {
+      "additionalProperties": false,
+      "description": "规则引擎命中的单条规则，用于向人工解释分级来源。",
+      "properties": {
+        "rule_id": {
+          "maxLength": 50,
+          "minLength": 1,
+          "title": "Rule Id",
+          "type": "string"
+        },
+        "category": {
+          "maxLength": 50,
+          "minLength": 1,
+          "title": "Category",
+          "type": "string"
+        },
+        "description": {
+          "maxLength": 300,
+          "minLength": 1,
+          "title": "Description",
+          "type": "string"
+        },
+        "severity": {
+          "maximum": 5,
+          "minimum": 0,
+          "title": "Severity",
+          "type": "integer"
+        },
+        "weight": {
+          "minimum": 0.0,
+          "title": "Weight",
+          "type": "number"
+        }
+      },
+      "required": [
+        "rule_id",
+        "category",
+        "description",
+        "severity",
+        "weight"
+      ],
+      "title": "HitRule",
+      "type": "object"
+    },
+    "PublicLLMAdvisory": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "enum": [
+            "SUCCESS",
+            "FALLBACK",
+            "DISABLED"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "provider": {
+          "title": "Provider",
+          "type": "string"
+        },
+        "model": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Model"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reason"
+        },
+        "risk_summary": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Risk Summary"
+        },
+        "key_factors": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Key Factors",
+          "type": "array"
+        },
+        "recommendation": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Recommendation"
+        },
+        "rationale": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rationale"
+        },
+        "evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Ids",
+          "type": "array"
+        },
+        "policy_chunk_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Policy Chunk Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "status",
+        "provider"
+      ],
+      "title": "PublicLLMAdvisory",
+      "type": "object"
+    },
+    "RiskGrade": {
+      "additionalProperties": false,
+      "description": "当前风险分级结果。仅用于报告展示，不参与任何自动处置。\n\n注意区分两个\"等级\"：\n- `risk_level` 风险等级（三级）：RED / YELLOW / GREEN，由分值 + 档位标准判定；\n- `importance_tier` 供应商重要性（两级）：重要 / 一般，由银行名单定义，只作分值系数。\n两者独立：重要性不参与风险等级判定。\n\n分值保留（`score`），并额外给出等级名称（`grade_label`）与\n该等级对应的明确分值标准（`grade_range`），便于报告直接展示\"X 分属于 Y 级\"。",
+      "properties": {
+        "supplier_id": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Supplier Id",
+          "type": "string"
+        },
+        "risk_level": {
+          "enum": [
+            "RED",
+            "YELLOW",
+            "GREEN"
+          ],
+          "title": "Risk Level",
+          "type": "string"
+        },
+        "score": {
+          "minimum": 0.0,
+          "title": "Score",
+          "type": "number"
+        },
+        "grade_tier": {
+          "default": "GREEN",
+          "enum": [
+            "RED",
+            "YELLOW",
+            "GREEN"
+          ],
+          "title": "Grade Tier",
+          "type": "string"
+        },
+        "grade_label": {
+          "default": "低风险",
+          "maxLength": 20,
+          "minLength": 1,
+          "title": "Grade Label",
+          "type": "string"
+        },
+        "grade_range": {
+          "default": "[0, 2.5)",
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Grade Range",
+          "type": "string"
+        },
+        "next_threshold_gap": {
+          "default": 0.0,
+          "title": "Next Threshold Gap",
+          "type": "number"
+        },
+        "grade_basis": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Grade Basis",
+          "type": "string"
+        },
+        "hit_rules": {
+          "items": {
+            "$ref": "#/$defs/HitRule"
+          },
+          "maxItems": 50,
+          "title": "Hit Rules",
+          "type": "array"
+        },
+        "dimension_breakdown": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "title": "Dimension Breakdown",
+          "type": "object"
+        },
+        "recent_event_count": {
+          "minimum": 0,
+          "title": "Recent Event Count",
+          "type": "integer"
+        },
+        "window_weeks": {
+          "maximum": 52,
+          "minimum": 1,
+          "title": "Window Weeks",
+          "type": "integer"
+        },
+        "window_display": {
+          "default": "近12周",
+          "maxLength": 60,
+          "minLength": 1,
+          "title": "Window Display",
+          "type": "string"
+        },
+        "window_unit": {
+          "default": "week",
+          "enum": [
+            "week",
+            "month"
+          ],
+          "title": "Window Unit",
+          "type": "string"
+        },
+        "window_size": {
+          "default": 12,
+          "maximum": 52,
+          "minimum": 1,
+          "title": "Window Size",
+          "type": "integer"
+        },
+        "importance_tier": {
+          "default": "一般",
+          "enum": [
+            "重要",
+            "一般"
+          ],
+          "title": "Importance Tier",
+          "type": "string"
+        },
+        "importance_coefficient": {
+          "default": 1.0,
+          "exclusiveMinimum": 0.0,
+          "title": "Importance Coefficient",
+          "type": "number"
+        },
+        "importance_source": {
+          "default": "DERIVED",
+          "enum": [
+            "BANK_LIST",
+            "DERIVED"
+          ],
+          "title": "Importance Source",
+          "type": "string"
+        },
+        "report_period": {
+          "default": "monthly",
+          "enum": [
+            "weekly",
+            "monthly"
+          ],
+          "title": "Report Period",
+          "type": "string"
+        },
+        "report_period_label": {
+          "default": "月报",
+          "maxLength": 20,
+          "minLength": 1,
+          "title": "Report Period Label",
+          "type": "string"
+        },
+        "in_rectify": {
+          "default": false,
+          "title": "In Rectify",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "supplier_id",
+        "risk_level",
+        "score",
+        "grade_basis",
+        "recent_event_count",
+        "window_weeks"
+      ],
+      "title": "RiskGrade",
+      "type": "object"
+    },
+    "TrendResult": {
+      "additionalProperties": false,
+      "properties": {
+        "trend_type": {
+          "enum": [
+            "RISING",
+            "STEADY",
+            "FALLING",
+            "SUDDEN_JUMP"
+          ],
+          "title": "Trend Type",
+          "type": "string"
+        },
+        "trend_desc": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Trend Desc",
+          "type": "string"
+        },
+        "trend_support_evidence_ids": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 50,
+          "title": "Trend Support Evidence Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "trend_type",
+        "trend_desc"
+      ],
+      "title": "TrendResult",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "多智能体分析的对外输出契约（不含预测字段）。",
+  "properties": {
+    "schema_version": {
+      "const": "C-DRAFT-V0.2",
+      "default": "C-DRAFT-V0.2",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "run_id": {
+      "title": "Run Id",
+      "type": "string"
+    },
+    "supplier_id": {
+      "title": "Supplier Id",
+      "type": "string"
+    },
+    "current_week": {
+      "maximum": 52,
+      "minimum": 1,
+      "title": "Current Week",
+      "type": "integer"
+    },
+    "risk_grade": {
+      "$ref": "#/$defs/RiskGrade"
+    },
+    "risk_identification": {
+      "title": "Risk Identification",
+      "type": "object"
+    },
+    "association_result": {
+      "title": "Association Result",
+      "type": "object"
+    },
+    "risk_trend": {
+      "$ref": "#/$defs/TrendResult"
+    },
+    "evidence_result": {
+      "$ref": "#/$defs/EvidenceResult"
+    },
+    "policy_context": {
+      "items": {
+        "type": "object"
+      },
+      "title": "Policy Context",
+      "type": "array"
+    },
+    "llm_advisory": {
+      "$ref": "#/$defs/PublicLLMAdvisory"
+    },
+    "candidate_actions": {
+      "items": {
+        "$ref": "#/$defs/CandidateAction"
+      },
+      "title": "Candidate Actions",
+      "type": "array"
+    },
+    "risk_report": {
+      "title": "Risk Report",
+      "type": "object"
+    },
+    "disposition": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/DispositionHint"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "cross_supplier_comparison": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CrossSupplierComparison"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "analysis_route": {
+      "default": "STANDARD",
+      "title": "Analysis Route",
+      "type": "string"
+    },
+    "status": {
+      "title": "Status",
+      "type": "string"
+    },
+    "errors": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Errors",
+      "type": "array"
+    },
+    "audit_trace": {
+      "items": {
+        "$ref": "#/$defs/AuditEntry"
+      },
+      "title": "Audit Trace",
+      "type": "array"
+    }
+  },
+  "required": [
+    "run_id",
+    "supplier_id",
+    "current_week",
+    "risk_grade",
+    "risk_trend",
+    "evidence_result",
+    "llm_advisory",
+    "status"
+  ],
+  "title": "AssessmentOutput",
+  "type": "object"
+}

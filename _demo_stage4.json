@@ -1,0 +1,362 @@
+{
+  "batch": {
+    "elapsed_ok": true,
+    "current_week": 52,
+    "analyzed_count": 200,
+    "failed_count": 0,
+    "level_counts": {
+      "RED": 11,
+      "YELLOW": 14,
+      "GREEN": 175
+    },
+    "report_period_counts": {
+      "weekly": 128,
+      "monthly": 72
+    },
+    "watchlist_size": 10,
+    "watchlist": [
+      {
+        "rank": 1,
+        "supplier_id": "S‑NOR062",
+        "risk_level": "RED",
+        "score": 2.856,
+        "importance_tier": "重要",
+        "importance_source": "BANK_LIST",
+        "report_period_label": "周报",
+        "trend_type": "SUDDEN_JUMP",
+        "key_dimensions": [
+          "失信"
+        ]
+      },
+      {
+        "rank": 2,
+        "supplier_id": "S‑NOR014",
+        "risk_level": "RED",
+        "score": 2.52,
+        "importance_tier": "一般",
+        "importance_source": "BANK_LIST",
+        "report_period_label": "月报",
+        "trend_type": "SUDDEN_JUMP",
+        "key_dimensions": [
+          "失信"
+        ]
+      },
+      {
+        "rank": 3,
+        "supplier_id": "S‑NOR096",
+        "risk_level": "RED",
+        "score": 2.34,
+        "importance_tier": "一般",
+        "importance_source": "BANK_LIST",
+        "report_period_label": "月报",
+        "trend_type": "RISING",
+        "key_dimensions": [
+          "司法"
+        ]
+      },
+      {
+        "rank": 4,
+        "supplier_id": "S‑NOR088",
+        "risk_level": "RED",
+        "score": 1.56,
+        "importance_tier": "一般",
+        "importance_source": "BANK_LIST",
+        "report_period_label": "月报",
+        "trend_type": "SUDDEN_JUMP",
+        "key_dimensions": [
+          "司法"
+        ]
+      },
+      {
+        "rank": 5,
+        "supplier_id": "S‑SUD171",
+        "risk_level": "RED",
+        "score": 1.44,
+        "importance_tier": "重要",
+        "importance_source": "BANK_LIST",
+        "report_period_label": "周报",
+        "trend_type": "RISING",
+        "key_dimensions": [
+          "经营状况"
+        ]
+      },
+      {
+        "rank": 6,
+        "supplier_id": "S‑SUD166",
+        "risk_level": "RED",
+        "score": 1.36,
+        "importance_tier": "一般",
+        "importance_source": "BANK_LIST",
+        "report_period_label": "月报",
+        "trend_type": "SUDDEN_JUMP",
+        "key_dimensions": [
+          "经营状况"
+        ]
+      },
+      {
+        "rank": 7,
+        "supplier_id": "S‑ACC134",
+        "risk_level": "RED",
+        "score": 1.296,
+        "importance_tier": "重要",
+        "importance_source": "BANK_LIST",
+        "report_period_label": "周报",
+        "trend_type": "SUDDEN_JUMP",
+        "key_dimensions": [
+          "知识产权"
+        ]
+      },
+      {
+        "rank": 8,
+        "supplier_id": "S‑NOR022",
+        "risk_level": "RED",
+        "score": 1.296,
+        "importance_tier": "重要",
+        "importance_source": "BANK_LIST",
+        "report_period_label": "周报",
+        "trend_type": "SUDDEN_JUMP",
+        "key_dimensions": [
+          "知识产权"
+        ]
+      },
+      {
+        "rank": 9,
+        "supplier_id": "S‑REC183",
+        "risk_level": "RED",
+        "score": 1.248,
+        "importance_tier": "重要",
+        "importance_source": "BANK_LIST",
+        "report_period_label": "周报",
+        "trend_type": "SUDDEN_JUMP",
+        "key_dimensions": [
+          "司法"
+        ]
+      },
+      {
+        "rank": 10,
+        "supplier_id": "S‑SUD161",
+        "risk_level": "RED",
+        "score": 1.224,
+        "importance_tier": "重要",
+        "importance_source": "BANK_LIST",
+        "report_period_label": "周报",
+        "trend_type": "SUDDEN_JUMP",
+        "key_dimensions": [
+          "经营状况"
+        ]
+      }
+    ],
+    "redeclare_candidate_count": 32,
+    "redeclare_candidates_sample": [
+      "S‑ACC118",
+      "S‑NOR001",
+      "S‑NOR002",
+      "S‑NOR004",
+      "S‑NOR006",
+      "S‑NOR007",
+      "S‑NOR009",
+      "S‑NOR020"
+    ],
+    "weekly_report_count": 128,
+    "monthly_report_count": 72,
+    "unknown_suppliers": []
+  },
+  "cross_supplier_comparison": {
+    "supplier_count": 200,
+    "level_distribution": {
+      "RED": 11,
+      "YELLOW": 14,
+      "GREEN": 175
+    },
+    "median_score": 0.0,
+    "dimension_baselines": [
+      {
+        "dimension": "公司背景",
+        "median_score": 0.0,
+        "median_event_count": 0.0
+      },
+      {
+        "dimension": "司法",
+        "median_score": 0.0,
+        "median_event_count": 0.0
+      },
+      {
+        "dimension": "失信",
+        "median_score": 0.0,
+        "median_event_count": 0.0
+      },
+      {
+        "dimension": "经营风险",
+        "median_score": 0.0,
+        "median_event_count": 0.0
+      },
+      {
+        "dimension": "经营状况",
+        "median_score": 0.0,
+        "median_event_count": 0.0
+      },
+      {
+        "dimension": "知识产权",
+        "median_score": 0.0,
+        "median_event_count": 0.0
+      }
+    ],
+    "top5_rankings": [
+      {
+        "rank": 1,
+        "supplier_id": "S‑ACC111",
+        "supplier_name": "ACC服务商111",
+        "importance_tier": "一般",
+        "risk_level": "GREEN",
+        "score": 0.0,
+        "deviation": 0.0
+      },
+      {
+        "rank": 2,
+        "supplier_id": "S‑ACC112",
+        "supplier_name": "ACC服务商112",
+        "importance_tier": "一般",
+        "risk_level": "GREEN",
+        "score": 0.0,
+        "deviation": 0.0
+      },
+      {
+        "rank": 3,
+        "supplier_id": "S‑ACC113",
+        "supplier_name": "ACC服务商113",
+        "importance_tier": "一般",
+        "risk_level": "GREEN",
+        "score": 0.0,
+        "deviation": 0.0
+      },
+      {
+        "rank": 4,
+        "supplier_id": "S‑ACC114",
+        "supplier_name": "ACC服务商114",
+        "importance_tier": "重要",
+        "risk_level": "GREEN",
+        "score": 0.0,
+        "deviation": 0.0
+      },
+      {
+        "rank": 5,
+        "supplier_id": "S‑ACC115",
+        "supplier_name": "ACC服务商115",
+        "importance_tier": "重要",
+        "risk_level": "GREEN",
+        "score": 0.0,
+        "deviation": 0.0
+      }
+    ],
+    "note": "本批共200家供应商；分值中位数0.00；横向对比数据仅供人工研判，不参与任何自动处置"
+  },
+  "batch_with_unknown": {
+    "analyzed_count": 1,
+    "unknown_suppliers": [
+      "NOT-EXIST-999"
+    ],
+    "failed_count": 0
+  },
+  "api": {
+    "health": {
+      "status": 200,
+      "code": 0,
+      "has_trace": true
+    },
+    "analyze_single": {
+      "status": 200,
+      "code": 0,
+      "mode": "single",
+      "risk_level": "RED",
+      "score": 2.52
+    },
+    "analyze_batch_sync": {
+      "status": 200,
+      "code": 0,
+      "mode": "batch",
+      "analyzed_count": 3,
+      "level_counts": {
+        "RED": 1,
+        "YELLOW": 1,
+        "GREEN": 1
+      },
+      "watchlist_size": 3,
+      "has_comparison": true,
+      "reports_withheld": true
+    },
+    "audience_manager": {
+      "status": 200,
+      "comparison_is_null": true,
+      "withheld_reason": "普通管理人员角色不下发横向对比数据；如需请以领导层角色请求"
+    },
+    "audience_leadership": {
+      "status": 200,
+      "comparison_is_null": false,
+      "median_score": 1.985
+    },
+    "analyze_async_submit": {
+      "status": 200,
+      "task_status": "PENDING",
+      "has_task_id": true,
+      "polling_url": "/agent/task/d03cb05f9dbf4363976e0d59abe21c87"
+    },
+    "task_poll": {
+      "status": 200,
+      "task_status": "RUNNING",
+      "has_result": false
+    },
+    "task_unknown_404": {
+      "status": 404,
+      "code": 40400,
+      "message": "unknown task_id: does-not-exist"
+    },
+    "report_get": {
+      "status": 200,
+      "code": 0,
+      "risk_level": "RED"
+    },
+    "report_unknown_404": {
+      "status": 404,
+      "code": 40400,
+      "message": "unknown supplier_id: NO-SUCH-001"
+    },
+    "tools_evidence": {
+      "status": 200,
+      "code": 0,
+      "has_evidence": true
+    },
+    "tools_history": {
+      "status": 200,
+      "code": 0,
+      "risk_level": "RED",
+      "has_trend": true
+    },
+    "review_submit": {
+      "status": 200,
+      "code": 0,
+      "review_result": "APPROVED"
+    },
+    "review_duplicate_400": {
+      "status": 400,
+      "code": 40000,
+      "message": "Review already exists for run_id=demo-run-1789130588"
+    },
+    "review_invalid_422": {
+      "status": 422,
+      "code": 42200
+    },
+    "redeclare_submit": {
+      "status": 200,
+      "code": 0,
+      "disposition_state": "AWAITING_SUPPLIER_REDECLARE",
+      "attachment_refs": [
+        "oss://demo/rectify_report.pdf"
+      ]
+    },
+    "reviews_list": {
+      "status": 200,
+      "code": 0,
+      "total": 1
+    }
+  }
+}

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>供应商风险评估报告 - {{ supplier_id }}</title>
+<style>
+  :root { --red:#dc2626; --yellow:#d97706; --green:#059669; --ink:#0f172a; --muted:#64748b; }
+  * { box-sizing: border-box; }
+  body { font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif; color: var(--ink);
+         margin: 0; padding: 40px; background: #f8fafc; }
+  .sheet { max-width: 900px; margin: 0 auto; background: #fff; padding: 48px;
+           border-radius: 12px; box-shadow: 0 8px 32px rgba(15,23,42,.08); }
+  h1 { font-size: 26px; margin: 0 0 6px; }
+  .sub { color: var(--muted); font-size: 13px; margin-bottom: 28px; }
+  h2 { font-size: 17px; margin: 32px 0 12px; padding-left: 10px; border-left: 4px solid #1d4ed8; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+  th { background: #f1f5f9; font-weight: 600; color: #334155; }
+  .badge { display: inline-block; padding: 6px 18px; border-radius: 999px;
+           color: #fff; font-weight: 700; font-size: 15px; }
+  .badge.RED { background: var(--red); }
+  .badge.YELLOW { background: var(--yellow); }
+  .badge.GREEN { background: var(--green); }
+  .note { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 12px 16px;
+          font-size: 13px; color: #1e40af; border-radius: 6px; margin: 16px 0; }
+  ul { padding-left: 20px; font-size: 14px; line-height: 1.8; }
+  .foot { margin-top: 36px; padding-top: 16px; border-top: 1px solid #e2e8f0;
+          font-size: 12px; color: var(--muted); }
+  @media print { body { background: #fff; padding: 0; } .sheet { box-shadow: none; border-radius: 0; } }
+</style>
+</head>
+<body>
+<div class="sheet">
+  <h1>供应商风险评估报告</h1>
+  <div class="sub">{{ supplier_name }}（{{ supplier_id }}）｜评估周次：第 {{ current_week }} 周｜生成时间：{{ generated_at }}</div>
+
+  <h2>一、供应商基本信息</h2>
+  {{ profile_table }}
+
+  <h2>二、当前风险等级</h2>
+  <p><span class="badge {{ risk_level }}">{{ level_label }}</span>　规则得分：{{ score }}</p>
+  <p style="font-size:13px;color:#475569">{{ grade_basis }}</p>
+  <div class="note">风险等级仅用于报告展示，不参与任何自动处置；所有处置均需人工确认。</div>
+
+  <h2>三、六维度风险分布</h2>
+  {{ dimension_table }}
+
+  <h2>四、风险趋势</h2>
+  <p><strong>{{ trend_label }}</strong>　{{ trend_desc }}</p>
+  <p style="font-size:13px;color:#475569">{{ association_summary }}</p>
+
+  <h2>五、关键风险因素</h2>
+  {{ key_factor_list }}
+
+  <h2>六、风险证据</h2>
+  {{ evidence_table }}
+
+  <h2>七、政策依据</h2>
+  {{ policy_list }}
+
+  <h2>八、AI 分析结论</h2>
+  <p>{{ risk_summary }}</p>
+  <p style="font-size:13px;color:#475569">{{ rationale }}</p>
+  <p style="font-size:12px;color:#94a3b8">{{ llm_status_label }}</p>
+
+  <h2>九、AI 处置建议</h2>
+  <p>{{ recommendation }}</p>
+  {{ action_list }}
+
+  <h2>十、处置提示与人工审核</h2>
+  <p>状态：<strong>{{ human_review_status }}</strong></p>
+  <ul>
+    <li>处置状态：<strong>{{ disposition_state_label }}</strong></li>
+    <li>建议分发对象：{{ delivery_audience }}</li>
+    <li>是否允许供应商重新申报：{{ can_redeclare }}</li>
+    <li>判定原因：{{ disposition_reason }}</li>
+  </ul>
+  <div class="foot">本报告为辅助研判材料，须经人工复核后方可作为处置依据。</div>
+
+</div>
+</body>
+</html>

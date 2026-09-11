@@ -1,0 +1,403 @@
+{
+  "case_red": {
+    "label": "RED 高风险案例（命中红线 RL-SEV-3 + 失信 R-DSH-01）",
+    "supplier_id": "S‑NOR014",
+    "supplier_name": "NOR服务商014",
+    "current_week": 52,
+    "elapsed_s": 68.69,
+    "analysis_route": "HIGH_RISK_DEEP_DIVE",
+    "risk_level": "RED",
+    "grade_label": "高风险",
+    "score": 2.52,
+    "grade_range": "[2.0, +∞)",
+    "next_threshold_gap": 0.0,
+    "window_display": "近12周",
+    "importance_tier": "一般",
+    "importance_source": "BANK_LIST",
+    "report_period_label": "月报",
+    "recent_event_count": 1,
+    "hit_rules": [
+      {
+        "rule_id": "RL-SEV-3",
+        "category": "*",
+        "description": "统计窗口内出现严重程度>=3的极高风险事件",
+        "severity": 4
+      },
+      {
+        "rule_id": "R-DSH-01",
+        "category": "失信",
+        "description": "统计窗口内出现失信类风险事件",
+        "severity": 4
+      }
+    ],
+    "dimension_breakdown": [
+      {
+        "dimension": "公司背景",
+        "score": 0.0
+      },
+      {
+        "dimension": "司法",
+        "score": 0.0
+      },
+      {
+        "dimension": "失信",
+        "score": 2.52
+      },
+      {
+        "dimension": "经营风险",
+        "score": 0.0
+      },
+      {
+        "dimension": "经营状况",
+        "score": 0.0
+      },
+      {
+        "dimension": "知识产权",
+        "score": 0.0
+      }
+    ],
+    "grade_basis": "近12周内共1条风险事件，覆盖1个维度；规则得分2.52，等级「高风险」（分值标准：[2.0, +∞)）；供应商重要性「一般」（系数1，来源：银行名单）；命中红线规则，直接判最高档",
+    "llm_node_status": {
+      "decision": "SUCCESS",
+      "risk_identification": "SUCCESS",
+      "association_analysis": "SUCCESS",
+      "evidence": "SUCCESS",
+      "consistency_check": "SUCCESS"
+    },
+    "llm_node_success_count": 5,
+    "llm_node_total": 5,
+    "llm_status": "SUCCESS",
+    "risk_summary": "供应商S-NOR014在近12周内被识别为高风险，风险等级为RED，规则得分为2.52。窗口期内发生1条严重违法失信事件，主要风险维度为失信。命中红线规则RL-SEV-3和R-DSH-01，直接判最高风险等级。",
+    "trend_type": "SUDDEN_JUMP",
+    "trend_desc": "近期关联分析的加权严重度呈现突增趋势，从上周期的0.0急剧上升到本周期的4.0，表明风险事件发生显著变化。",
+    "recommendation": "建议对供应商S-NOR014进行人工复核，重点关注其失信风险事件，并根据银行相关政策进行处置。",
+    "candidate_actions": [
+      {
+        "suggest_type": "rectify",
+        "suggest_priority": "HIGH",
+        "suggest_content": "对供应商S-NOR014进行人工复核，重点关注其失信风险事件，并根据银行相关政策进行处置。",
+        "execution_status": "PENDING_HUMAN_REVIEW"
+      }
+    ],
+    "consistency_check": {
+      "status": "SUCCESS",
+      "consistent": true,
+      "conflicts": [],
+      "evidence_sufficient": true,
+      "notes": "复核结论：风险识别、关联分析、决策建议与证据均一致，证据足以支撑风险结论。"
+    },
+    "policy_count": 1,
+    "policy_vector_sources": [
+      "embedding"
+    ],
+    "disposition": {
+      "disposition_state": "PENDING_HUMAN_REVIEW",
+      "can_redeclare": false,
+      "delivery_audience": [
+        "LEADERSHIP",
+        "MANAGER"
+      ],
+      "reason": "风险等级为RED，不属于「问题较小」"
+    },
+    "human_review_status": "PENDING_HUMAN_REVIEW",
+    "evidence_count": 1,
+    "section_counts_equal": true,
+    "md_section_count": 10,
+    "html_section_count": 10,
+    "saved_files": {
+      "markdown": "_demo_report\\risk_report_S‑NOR014.md",
+      "html": "_demo_report\\risk_report_S‑NOR014.html"
+    },
+    "errors": []
+  },
+  "case_red_judicial": {
+    "label": "RED 高风险案例（命中红线 RL-SEV-3 + 司法 R-JUD-01）",
+    "supplier_id": "S‑NOR096",
+    "supplier_name": "NOR服务商096",
+    "current_week": 52,
+    "elapsed_s": 50.29,
+    "analysis_route": "HIGH_RISK_DEEP_DIVE",
+    "risk_level": "RED",
+    "grade_label": "高风险",
+    "score": 2.34,
+    "grade_range": "[2.0, +∞)",
+    "next_threshold_gap": 0.0,
+    "window_display": "近12周",
+    "importance_tier": "一般",
+    "importance_source": "BANK_LIST",
+    "report_period_label": "月报",
+    "recent_event_count": 1,
+    "hit_rules": [
+      {
+        "rule_id": "RL-SEV-3",
+        "category": "*",
+        "description": "统计窗口内出现严重程度>=3的极高风险事件",
+        "severity": 4
+      },
+      {
+        "rule_id": "R-JUD-01",
+        "category": "司法",
+        "description": "统计窗口内出现司法类风险事件",
+        "severity": 4
+      }
+    ],
+    "dimension_breakdown": [
+      {
+        "dimension": "公司背景",
+        "score": 0.0
+      },
+      {
+        "dimension": "司法",
+        "score": 2.34
+      },
+      {
+        "dimension": "失信",
+        "score": 0.0
+      },
+      {
+        "dimension": "经营风险",
+        "score": 0.0
+      },
+      {
+        "dimension": "经营状况",
+        "score": 0.0
+      },
+      {
+        "dimension": "知识产权",
+        "score": 0.0
+      }
+    ],
+    "grade_basis": "近12周内共1条风险事件，覆盖1个维度；规则得分2.34，等级「高风险」（分值标准：[2.0, +∞)）；供应商重要性「一般」（系数1，来源：银行名单）；命中红线规则，直接判最高档",
+    "llm_node_status": {
+      "decision": "SUCCESS",
+      "risk_identification": "SUCCESS",
+      "association_analysis": "SUCCESS",
+      "evidence": "SUCCESS",
+      "consistency_check": "SUCCESS"
+    },
+    "llm_node_success_count": 5,
+    "llm_node_total": 5,
+    "llm_status": "SUCCESS",
+    "risk_summary": "供应商S-NOR096近12周内发生1条风险事件，涉及司法维度（法院公告），规则得分为2.34，评定为高风险等级。命中红线规则RL-SEV-3和R-JUD-01，主要风险维度为司法。",
+    "trend_type": "RISING",
+    "trend_desc": "加权严重度由3.0上升至4.0，呈现上升趋势。司法维度事件数量由0增至1，支持整体趋势。",
+    "recommendation": "对供应商S-NOR096进行高风险关注，建议进行人工复核和进一步调查，以确认风险事件的性质和影响。",
+    "candidate_actions": [
+      {
+        "suggest_type": "rectify",
+        "suggest_priority": "HIGH",
+        "suggest_content": "对供应商S-NOR096进行人工复核和进一步调查，以确认风险事件的性质和影响。",
+        "execution_status": "PENDING_HUMAN_REVIEW"
+      }
+    ],
+    "consistency_check": {
+      "status": "SUCCESS",
+      "consistent": true,
+      "conflicts": [],
+      "evidence_sufficient": true,
+      "notes": "复核结论：风险识别与规则等级一致，关联分析与趋势自洽，决策建议与风险等级和证据相符，政策依据支撑结论。"
+    },
+    "policy_count": 1,
+    "policy_vector_sources": [
+      "embedding"
+    ],
+    "disposition": {
+      "disposition_state": "PENDING_HUMAN_REVIEW",
+      "can_redeclare": false,
+      "delivery_audience": [
+        "LEADERSHIP",
+        "MANAGER"
+      ],
+      "reason": "风险等级为RED，不属于「问题较小」"
+    },
+    "human_review_status": "PENDING_HUMAN_REVIEW",
+    "evidence_count": 1,
+    "section_counts_equal": true,
+    "md_section_count": 10,
+    "html_section_count": 10,
+    "saved_files": {
+      "markdown": "_demo_report\\risk_report_S‑NOR096.md",
+      "html": "_demo_report\\risk_report_S‑NOR096.html"
+    },
+    "errors": []
+  },
+  "case_yellow": {
+    "label": "YELLOW 中风险案例（多维度交叉，未触红线）",
+    "supplier_id": "S‑NOR033",
+    "supplier_name": "NOR服务商033",
+    "current_week": 52,
+    "elapsed_s": 66.96,
+    "analysis_route": "STANDARD",
+    "risk_level": "YELLOW",
+    "grade_label": "中风险",
+    "score": 1.45,
+    "grade_range": "[0.8, 2.0)",
+    "next_threshold_gap": 0.55,
+    "window_display": "近12周",
+    "importance_tier": "一般",
+    "importance_source": "BANK_LIST",
+    "report_period_label": "月报",
+    "recent_event_count": 2,
+    "hit_rules": [],
+    "dimension_breakdown": [
+      {
+        "dimension": "公司背景",
+        "score": 0.0
+      },
+      {
+        "dimension": "司法",
+        "score": 0.0
+      },
+      {
+        "dimension": "失信",
+        "score": 0.0
+      },
+      {
+        "dimension": "经营风险",
+        "score": 0.6
+      },
+      {
+        "dimension": "经营状况",
+        "score": 0.0
+      },
+      {
+        "dimension": "知识产权",
+        "score": 0.85
+      }
+    ],
+    "grade_basis": "近12周内共2条风险事件，覆盖2个维度；规则得分1.45，等级「中风险」（分值标准：[0.8, 2.0)）；供应商重要性「一般」（系数1，来源：银行名单）",
+    "llm_node_status": {
+      "decision": "SUCCESS",
+      "risk_identification": "SUCCESS",
+      "association_analysis": "SUCCESS",
+      "evidence": "SUCCESS",
+      "consistency_check": "SUCCESS"
+    },
+    "llm_node_success_count": 5,
+    "llm_node_total": 5,
+    "llm_status": "SUCCESS",
+    "risk_summary": "供应商S-NOR033近12周内共发生2条风险事件，涉及知识产权和经营风险两个维度，规则得分为1.45，评定为中风险。",
+    "trend_type": "RISING",
+    "trend_desc": "加权严重度从上期1.0上升至本期4.0，呈现明显上升趋势。经营风险和知识产权维度均有提升，但知识产权维度计数未变。",
+    "recommendation": "建议对供应商S-NOR033进行重点关注，审核其知识产权和经营风险相关事件。",
+    "candidate_actions": [
+      {
+        "suggest_type": "observe",
+        "suggest_priority": "MEDIUM",
+        "suggest_content": "对供应商S-NOR033的知识产权和经营风险进行持续监控，并要求其提供相关事件的详细说明。",
+        "execution_status": "PENDING_HUMAN_REVIEW"
+      }
+    ],
+    "consistency_check": {
+      "status": "SUCCESS",
+      "consistent": true,
+      "conflicts": [],
+      "evidence_sufficient": true,
+      "notes": "复核结论：风险识别、关联分析、证据和决策建议均一致，证据充足。"
+    },
+    "policy_count": 1,
+    "policy_vector_sources": [
+      "embedding"
+    ],
+    "disposition": {
+      "disposition_state": "PENDING_HUMAN_REVIEW",
+      "can_redeclare": false,
+      "delivery_audience": [
+        "LEADERSHIP",
+        "MANAGER"
+      ],
+      "reason": "规则得分1.45超过可重新申报上限0.8"
+    },
+    "human_review_status": "PENDING_HUMAN_REVIEW",
+    "evidence_count": 2,
+    "section_counts_equal": true,
+    "md_section_count": 10,
+    "html_section_count": 10,
+    "saved_files": {
+      "markdown": "_demo_report\\risk_report_S‑NOR033.md",
+      "html": "_demo_report\\risk_report_S‑NOR033.html"
+    },
+    "errors": []
+  },
+  "case_insufficient": {
+    "label": "证据不足案例（窗口内无事件）",
+    "supplier_id": "S‑NOR012",
+    "supplier_name": "NOR服务商012",
+    "current_week": 52,
+    "elapsed_s": 10.45,
+    "analysis_route": "STANDARD",
+    "risk_level": "GREEN",
+    "grade_label": "低风险",
+    "score": 0.0,
+    "grade_range": "[0, 0.8)",
+    "next_threshold_gap": 0.8,
+    "window_display": "近12周",
+    "importance_tier": "重要",
+    "importance_source": "BANK_LIST",
+    "report_period_label": "周报",
+    "recent_event_count": 0,
+    "hit_rules": [],
+    "dimension_breakdown": [
+      {
+        "dimension": "公司背景",
+        "score": 0.0
+      },
+      {
+        "dimension": "司法",
+        "score": 0.0
+      },
+      {
+        "dimension": "失信",
+        "score": 0.0
+      },
+      {
+        "dimension": "经营风险",
+        "score": 0.0
+      },
+      {
+        "dimension": "经营状况",
+        "score": 0.0
+      },
+      {
+        "dimension": "知识产权",
+        "score": 0.0
+      }
+    ],
+    "grade_basis": "近12周内共0条风险事件，覆盖0个维度；规则得分0.00，等级「低风险」（分值标准：[0, 0.8)）；供应商重要性「重要」（系数1.2，来源：银行名单）",
+    "llm_node_status": {
+      "risk_identification": "SUCCESS",
+      "association_analysis": "SUCCESS",
+      "evidence": "SUCCESS"
+    },
+    "llm_node_success_count": 3,
+    "llm_node_total": 3,
+    "llm_status": "DISABLED",
+    "risk_summary": "供应商S-NOR012在近12周内无风险事件发生，风险等级为低风险（GREEN），规则得分为0.00。无数据维度，无主要风险维度，未命中任何规则。",
+    "trend_type": "STEADY",
+    "trend_desc": "加权严重度在过去12周内保持持平，无变化。",
+    "recommendation": "",
+    "candidate_actions": [],
+    "consistency_check": null,
+    "policy_count": 0,
+    "policy_vector_sources": [],
+    "disposition": {
+      "disposition_state": "EVIDENCE_INSUFFICIENT",
+      "can_redeclare": false,
+      "delivery_audience": [
+        "LEADERSHIP",
+        "MANAGER"
+      ],
+      "reason": "证据链不完整，需人工补充材料后复核，不进入供应商重新申报流程"
+    },
+    "human_review_status": "EVIDENCE_INSUFFICIENT",
+    "evidence_count": 0,
+    "section_counts_equal": true,
+    "md_section_count": 10,
+    "html_section_count": 10,
+    "saved_files": {
+      "markdown": "_demo_report\\risk_report_S‑NOR012.md",
+      "html": "_demo_report\\risk_report_S‑NOR012.html"
+    },
+    "errors": []
+  }
+}

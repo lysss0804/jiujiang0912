@@ -1,0 +1,288 @@
+{
+  "current_week": 52,
+  "total": 200,
+  "level_counts": {
+    "RED": 11,
+    "YELLOW": 14,
+    "GREEN": 175
+  },
+  "top_red": [
+    {
+      "supplier_id": "S‑NOR014",
+      "risk_level": "RED",
+      "score": 2.52,
+      "recent_event_count": 1,
+      "hit_rules": [
+        "RL-SEV-3",
+        "R-DSH-01"
+      ],
+      "importance": "一般",
+      "dimensions": {
+        "失信": 2.52
+      }
+    },
+    {
+      "supplier_id": "S‑NOR062",
+      "risk_level": "RED",
+      "score": 2.38,
+      "recent_event_count": 1,
+      "hit_rules": [
+        "RL-SEV-3",
+        "R-DSH-01"
+      ],
+      "importance": "一般",
+      "dimensions": {
+        "失信": 2.38
+      }
+    },
+    {
+      "supplier_id": "S‑NOR096",
+      "risk_level": "RED",
+      "score": 2.34,
+      "recent_event_count": 1,
+      "hit_rules": [
+        "RL-SEV-3",
+        "R-JUD-01"
+      ],
+      "importance": "一般",
+      "dimensions": {
+        "司法": 2.34
+      }
+    },
+    {
+      "supplier_id": "S‑SUD166",
+      "risk_level": "RED",
+      "score": 1.6,
+      "recent_event_count": 1,
+      "hit_rules": [
+        "RL-SEV-3"
+      ],
+      "importance": "一般",
+      "dimensions": {
+        "安全": 1.6
+      }
+    },
+    {
+      "supplier_id": "S‑NOR088",
+      "risk_level": "RED",
+      "score": 1.56,
+      "recent_event_count": 1,
+      "hit_rules": [
+        "RL-SEV-3",
+        "R-JUD-01"
+      ],
+      "importance": "一般",
+      "dimensions": {
+        "司法": 1.56
+      }
+    },
+    {
+      "supplier_id": "S‑SUD161",
+      "risk_level": "RED",
+      "score": 1.2,
+      "recent_event_count": 1,
+      "hit_rules": [
+        "RL-SEV-3"
+      ],
+      "importance": "一般",
+      "dimensions": {
+        "安全": 1.2
+      }
+    },
+    {
+      "supplier_id": "S‑SUD167",
+      "risk_level": "RED",
+      "score": 1.2,
+      "recent_event_count": 1,
+      "hit_rules": [
+        "RL-SEV-3"
+      ],
+      "importance": "一般",
+      "dimensions": {
+        "安全": 1.2
+      }
+    },
+    {
+      "supplier_id": "S‑SUD171",
+      "risk_level": "RED",
+      "score": 1.2,
+      "recent_event_count": 1,
+      "hit_rules": [
+        "RL-SEV-3"
+      ],
+      "importance": "一般",
+      "dimensions": {
+        "安全": 1.2
+      }
+    }
+  ],
+  "top_yellow": [
+    {
+      "supplier_id": "S‑NOR033",
+      "risk_level": "YELLOW",
+      "score": 1.45,
+      "recent_event_count": 2,
+      "hit_rules": [],
+      "importance": "一般",
+      "dimensions": {
+        "经营": 0.6,
+        "安全": 0.85
+      }
+    },
+    {
+      "supplier_id": "S‑NOR027",
+      "risk_level": "YELLOW",
+      "score": 1.25,
+      "recent_event_count": 2,
+      "hit_rules": [],
+      "importance": "一般",
+      "dimensions": {
+        "履约": 0.4,
+        "安全": 0.85
+      }
+    },
+    {
+      "supplier_id": "S‑NOR037",
+      "risk_level": "YELLOW",
+      "score": 1.25,
+      "recent_event_count": 2,
+      "hit_rules": [],
+      "importance": "一般",
+      "dimensions": {
+        "安全": 0.4,
+        "经营": 0.85
+      }
+    },
+    {
+      "supplier_id": "S‑NOR023",
+      "risk_level": "YELLOW",
+      "score": 1.2,
+      "recent_event_count": 2,
+      "hit_rules": [],
+      "importance": "一般",
+      "dimensions": {
+        "履约": 0.6,
+        "人员": 0.6
+      }
+    },
+    {
+      "supplier_id": "S‑NOR042",
+      "risk_level": "YELLOW",
+      "score": 1.2,
+      "recent_event_count": 3,
+      "hit_rules": [],
+      "importance": "一般",
+      "dimensions": {
+        "人员": 0.6,
+        "履约": 0.6
+      }
+    }
+  ],
+  "top_score_overall": [
+    {
+      "supplier_id": "S‑NOR014",
+      "risk_level": "RED",
+      "score": 2.52,
+      "recent_event_count": 1,
+      "hit_rules": [
+        "RL-SEV-3",
+        "R-DSH-01"
+      ],
+      "importance": "一般",
+      "dimensions": {
+        "失信": 2.52
+      }
+    },
+    {
+      "supplier_id": "S‑NOR062",
+      "risk_level": "RED",
+      "score": 2.38,
+      "recent_event_count": 1,
+      "hit_rules": [
+        "RL-SEV-3",
+        "R-DSH-01"
+      ],
+      "importance": "一般",
+      "dimensions": {
+        "失信": 2.38
+      }
+    },
+    {
+      "supplier_id": "S‑NOR096",
+      "risk_level": "RED",
+      "score": 2.34,
+      "recent_event_count": 1,
+      "hit_rules": [
+        "RL-SEV-3",
+        "R-JUD-01"
+      ],
+      "importance": "一般",
+      "dimensions": {
+        "司法": 2.34
+      }
+    },
+    {
+      "supplier_id": "S‑SUD166",
+      "risk_level": "RED",
+      "score": 1.6,
+      "recent_event_count": 1,
+      "hit_rules": [
+        "RL-SEV-3"
+      ],
+      "importance": "一般",
+      "dimensions": {
+        "安全": 1.6
+      }
+    },
+    {
+      "supplier_id": "S‑NOR088",
+      "risk_level": "RED",
+      "score": 1.56,
+      "recent_event_count": 1,
+      "hit_rules": [
+        "RL-SEV-3",
+        "R-JUD-01"
+      ],
+      "importance": "一般",
+      "dimensions": {
+        "司法": 1.56
+      }
+    },
+    {
+      "supplier_id": "S‑NOR033",
+      "risk_level": "YELLOW",
+      "score": 1.45,
+      "recent_event_count": 2,
+      "hit_rules": [],
+      "importance": "一般",
+      "dimensions": {
+        "经营": 0.6,
+        "安全": 0.85
+      }
+    },
+    {
+      "supplier_id": "S‑NOR027",
+      "risk_level": "YELLOW",
+      "score": 1.25,
+      "recent_event_count": 2,
+      "hit_rules": [],
+      "importance": "一般",
+      "dimensions": {
+        "履约": 0.4,
+        "安全": 0.85
+      }
+    },
+    {
+      "supplier_id": "S‑NOR037",
+      "risk_level": "YELLOW",
+      "score": 1.25,
+      "recent_event_count": 2,
+      "hit_rules": [],
+      "importance": "一般",
+      "dimensions": {
+        "安全": 0.4,
+        "经营": 0.85
+      }
+    }
+  ]
+}

@@ -1,0 +1,195 @@
+{
+  "case_main": {
+    "label": "主案例（真实全链路，6 节点真调）",
+    "supplier_id": "S‑NOR001",
+    "supplier_name": "NOR服务商001",
+    "current_week": 52,
+    "elapsed_s": 51.68,
+    "analysis_route": "STANDARD",
+    "risk_level": "GREEN",
+    "grade_label": "低风险",
+    "score": 0.51,
+    "grade_range": "[0, 0.8)",
+    "window_display": "近12周",
+    "importance_tier": "一般",
+    "importance_source": "BANK_LIST",
+    "report_period_label": "月报",
+    "hit_rules": [],
+    "llm_node_status": {
+      "decision": "SUCCESS",
+      "risk_identification": "SUCCESS",
+      "association_analysis": "SUCCESS",
+      "evidence": "SUCCESS",
+      "consistency_check": "SUCCESS"
+    },
+    "llm_node_success_count": 5,
+    "llm_node_total": 5,
+    "llm_status": "SUCCESS",
+    "risk_summary": "供应商S-NOR001近12周内共1条风险事件，主要涉及经营风险（核心人员离职），风险等级为低风险（等级「低风险」，分值0.51），无其他维度风险事件。",
+    "trend_type": "FALLING",
+    "trend_desc": "加权严重度从上周的2.0下降至本周的1.0，呈现下降趋势。经营风险维度在本窗口期出现1次事件，而知识产权维度在上周有1次事件，本周无事件。",
+    "association_summary": "当前仅关注经营风险维度，未涉及跨维度关联。",
+    "trend_desc_rendered_in_md": true,
+    "trend_desc_rendered_in_html": true,
+    "recommendation": "建议对供应商S-NOR001进行观察，并持续监控其经营风险。",
+    "rationale": "供应商S-NOR001当前风险等级为低风险，且仅有一条风险事件涉及经营风险（核心人员离职）。建议进行观察并持续监控，以确保风险不升级。",
+    "candidate_actions": [
+      {
+        "suggest_type": "observe",
+        "suggest_priority": "LOW",
+        "suggest_content": "建议对供应商S-NOR001进行观察，并持续监控其经营风险。",
+        "execution_status": "PENDING_HUMAN_REVIEW"
+      }
+    ],
+    "evidence_count": 1,
+    "evidence_sample": [
+      {
+        "evidence_id": "E‑S‑NOR001‑1",
+        "readable_summary": "第49周，经营风险维度下发生核心人员离职事件，严重程度为一般，来源于人力台账。"
+      }
+    ],
+    "policy_count": 1,
+    "policy_sample": [
+      {
+        "chunk_id": "5741e17f1aa5bb49-0000",
+        "document_name": "mock_policy.md",
+        "vector_source": "embedding",
+        "excerpt": "# 模拟外包风险处置规则（仅测试） > 本文为虚构测试材料，不是法律法规或银行正式制度。 当证据校验失败时，不得形成正式处置建议，应返回证据不足。中高风险候选建议应进入人工确认环节，未经确认不得自动…"
+      }
+    ],
+    "consistency_check": {
+      "status": "SUCCESS",
+      "consistent": true,
+      "conflicts": [],
+      "evidence_sufficient": true,
+      "notes": "复核结论：风险识别、等级、关联分析、决策建议及政策依据均一致且证据充分。"
+    },
+    "human_review_status": "AWAITING_SUPPLIER_REDECLARE",
+    "disposition": {
+      "disposition_state": "AWAITING_SUPPLIER_REDECLARE",
+      "can_redeclare": true,
+      "delivery_audience": [
+        "LEADERSHIP",
+        "MANAGER"
+      ],
+      "reason": "风险等级GREEN、得分0.51且无红线与高严重度事件，问题较小"
+    },
+    "dimension_breakdown": [
+      {
+        "dimension": "公司背景",
+        "event_count": 0,
+        "score": 0.0,
+        "data_status": "NO_DATA"
+      },
+      {
+        "dimension": "司法",
+        "event_count": 0,
+        "score": 0.0,
+        "data_status": "NO_DATA"
+      },
+      {
+        "dimension": "失信",
+        "event_count": 0,
+        "score": 0.0,
+        "data_status": "NO_DATA"
+      },
+      {
+        "dimension": "经营风险",
+        "event_count": 1,
+        "score": 0.51,
+        "data_status": "DATA"
+      },
+      {
+        "dimension": "经营状况",
+        "event_count": 0,
+        "score": 0.0,
+        "data_status": "NO_DATA"
+      },
+      {
+        "dimension": "知识产权",
+        "event_count": 0,
+        "score": 0.0,
+        "data_status": "NO_DATA"
+      }
+    ],
+    "markdown_sections": [
+      "一、供应商基本信息",
+      "二、当前风险等级",
+      "三、六维度风险分布",
+      "四、风险趋势",
+      "五、关键风险因素",
+      "六、风险证据",
+      "七、政策依据",
+      "八、AI 分析结论",
+      "九、AI 处置建议",
+      "十、处置提示与人工审核"
+    ],
+    "html_sections": [
+      "一、供应商基本信息",
+      "二、当前风险等级",
+      "三、六维度风险分布",
+      "四、风险趋势",
+      "五、关键风险因素",
+      "六、风险证据",
+      "七、政策依据",
+      "八、AI 分析结论",
+      "九、AI 处置建议",
+      "十、处置提示与人工审核"
+    ],
+    "section_counts_equal": true,
+    "markdown_chars": 1877,
+    "html_chars": 4533,
+    "saved_files": {
+      "markdown": "_demo_report\\risk_report_S‑NOR001.md",
+      "html": "_demo_report\\risk_report_S‑NOR001.html"
+    },
+    "audit_steps": [
+      {
+        "agent": "Coordinator",
+        "status": "PASS",
+        "detail": "schema=C-DRAFT-V0.2; risk_level=GREEN; score=0.51; tier=GREEN([0, 0.8)); importance=一般(BANK_LIST); window=近12周; report_period=monthly; route=STANDARD"
+      },
+      {
+        "agent": "Coordinator",
+        "status": "ROUTE",
+        "detail": "standard analysis branch selected"
+      },
+      {
+        "agent": "DimensionMappingAgent",
+        "status": "PASS",
+        "detail": "mapped=1; hit_dimensions=1; no_data=5; llm=SUCCESS"
+      },
+      {
+        "agent": "RiskIdentificationAgent",
+        "status": "PASS",
+        "detail": "risk_level=GREEN; visible_events=1; window=近12周; no_data_dims=5; depth=STANDARD; llm=SUCCESS"
+      },
+      {
+        "agent": "AssociationAnalysisAgent",
+        "status": "PASS",
+        "detail": "trend=FALLING; cross_dimension=False; dims=1; llm=SUCCESS"
+      },
+      {
+        "agent": "EvidenceAgent",
+        "status": "PASS",
+        "detail": "verified=1; dimensions=1; llm=SUCCESS; ok"
+      },
+      {
+        "agent": "PolicyRetrievalAgent",
+        "status": "PASS",
+        "detail": "approved_policy_chunks=1"
+      },
+      {
+        "agent": "DecisionAgent",
+        "status": "PASS",
+        "detail": "grounded_llm=GLM-4-FlashX-250414"
+      },
+      {
+        "agent": "ConsistencyCheckAgent",
+        "status": "PASS",
+        "detail": "consistent=True; evidence_sufficient=True; conflicts=0"
+      }
+    ],
+    "errors": []
+  }
+}

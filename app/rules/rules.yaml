@@ -1,0 +1,173 @@
+# ============================================================================
+# 银行外包供应商「当前风险」分级规则（可配置，待银行正式规则替换）
+#
+# 计算逻辑：
+#   1. 只统计「统计窗口」内的风险事件（窗口由请求/Settings 指定，默认近 12 周）
+#   2. 单条事件分值 = 严重度权重[event_severity] × 维度权重[event_category] × 时间衰减[距当前周数]
+#   3. 维度得分 = 该维度所有事件分值之和
+#   4. 总分 = 各维度得分之和 × 重要程度系数 × 整改系数（分数保留）
+#   5. 按 grade_tiers（从高到低的有序档位表）取第一个满足 min_score 的档 → 风险等级
+#
+# 注意：
+# - 分级结果仅用于报告展示，不参与任何自动处置；
+# - 风险等级是三级（RED/YELLOW/GREEN）；供应商重要性是两级（重要/一般），两者互不干扰。
+# ============================================================================
+
+version: "0.2.0-draft"
+description: "拟议的供应商当前风险分级规则，等待银行正式规则替换"
+
+# ---- 统计窗口默认值 ----
+# 优先级：请求入参 > Settings > 此处默认 > 内置默认；1 月 = 4 周。
+window_unit: week        # week / month
+window_size: 12
+weeks_per_month: 4
+
+# ---- 六个风险维度权重（新版口径）----
+# 说明：司法 / 失信 / 知识产权 在本期数据中无来源，由维度归类节点标记 NO_DATA 并计 0 分。
+category_weights:
+  公司背景: 1.1
+  司法: 1.3
+  失信: 1.4
+  经营风险: 1.2
+  经营状况: 1.0
+  知识产权: 0.9
+
+# ---- 事件严重度权重 ----
+severity_weights:
+  0: 0.0
+  1: 0.6
+  2: 1.0
+  3: 2.0
+  4: 3.0
+  5: 4.0
+
+# ---- 时间衰减：按「距当前周数」查表，未命中区间取 last ----
+# 越近的事件权重越高；老事件按衰减系数打折
+time_decay:
+  - max_weeks_ago: 2
+    factor: 1.0
+  - max_weeks_ago: 4
+    factor: 0.85
+  - max_weeks_ago: 8
+    factor: 0.6
+  - max_weeks_ago: 12
+    factor: 0.4
+  - max_weeks_ago: 999
+    factor: 0.2
+
+# ---- 供应商重要性系数（两级，由银行名单定义）----
+# 权威来源：suppliers.csv::importance_level（银行名单），系统只读不算，不做 max。
+# 名单缺失时才回退到「合同重要性 + 承载系统等级」合成，并把原「核心」并入「重要」。
+importance_coefficients:
+  一般: 1.0
+  重要: 1.2
+
+# 合同重要性 -> 重要程度档（仅名单缺失时作合成输入）
+contract_importance_mapping:
+  一般外包: 一般
+  重要外包: 重要
+
+# 系统等级 -> 重要程度档（仅名单缺失时作合成输入，三档归并为两档）
+system_level_mapping:
+  一般: 一般
+  重要: 重要
+  核心: 重要
+
+# ---- 报告周期：按供应商重要性分级（不是风险等级）----
+# 重要 -> 周报；一般 -> 月报
+report_period_by_importance:
+  重要: weekly
+  一般: monthly
+report_period_labels:
+  weekly: 周报
+  monthly: 月报
+
+# ---- 整改系数：处于整改期内说明已在处理，按比例下调当前风险 ----
+rectify_coefficient: 0.85
+
+# ---- 风险等级档位表（三级，从高到低有序）----
+# 取第一个满足 score >= min_score 的档；红线规则优先于分值。
+# range 为该档的「分值标准」描述，直接展示在报告里，说明「X 分属于 Y 级」。
+#
+# 标定说明：阈值按本地数据的分值量级标定（12 周窗口内总分上限约 3 分，
+# 事件规模越大分值越高），保证三档均有区分度；银行给出正式规则后只改此处即可，
+# 无需改动任何代码（换规则不改代码）。
+grade_tiers:
+  - tier: RED
+    label: 高风险
+    min_score: 2.0
+    range: "[2.0, +∞)"
+  - tier: YELLOW
+    label: 中风险
+    min_score: 0.8
+    range: "[0.8, 2.0)"
+  - tier: GREEN
+    label: 低风险
+    min_score: 0.0
+    range: "[0, 0.8)"
+
+# ---- 兜底条件：多维度同时命中时至少为中档（可关闭）----
+tier_rules:
+  dimensions_hit_min_count: 3   # 命中维度数达到该值时，兜底不低于 YELLOW
+  enabled: true
+
+# ---- 红线规则：命中任意一条直接判最高档 ----
+red_line_rules:
+  - rule_id: "RL-SEV-3"
+    category: "*"
+    description: "统计窗口内出现严重程度>=3的极高风险事件"
+    condition:
+      type: "severity_at_least"
+      value: 3
+
+# ---- 维度细则规则：用于生成「命中规则」明细，便于人工追溯 ----
+detail_rules:
+  - rule_id: "R-BKG-01"
+    category: "公司背景"
+    description: "统计窗口内公司背景维度风险事件数达到2条及以上"
+    condition:
+      type: "category_event_count_at_least"
+      value: 2
+  - rule_id: "R-JUD-01"
+    category: "司法"
+    description: "统计窗口内出现司法类风险事件"
+    condition:
+      type: "category_event_count_at_least"
+      value: 1
+  - rule_id: "R-DSH-01"
+    category: "失信"
+    description: "统计窗口内出现失信类风险事件"
+    condition:
+      type: "category_event_count_at_least"
+      value: 1
+  - rule_id: "R-BIZ-01"
+    category: "经营风险"
+    description: "统计窗口内经营风险维度风险事件数达到2条及以上"
+    condition:
+      type: "category_event_count_at_least"
+      value: 2
+  - rule_id: "R-STA-01"
+    category: "经营状况"
+    description: "统计窗口内出现经营状况类风险事件"
+    condition:
+      type: "category_event_count_at_least"
+      value: 1
+  - rule_id: "R-IPR-01"
+    category: "知识产权"
+    description: "统计窗口内出现知识产权类风险事件"
+    condition:
+      type: "category_event_count_at_least"
+      value: 1
+  - rule_id: "R-MUL-01"
+    category: "*"
+    description: "统计窗口内同时出现3个及以上风险维度，存在多维度交叉风险"
+    condition:
+      type: "cross_category_at_least"
+      value: 3
+
+# ---- 处置门禁：判定「问题较小」，允许供应商重新申报 ----
+# 判定完全确定性，模型不参与：风险等级为中/低档 + 分值不超过上限 + 无红线 + 无高严重度事件。
+# 分值上限同样按本地数据量级标定（应不高于 YELLOW 档下限，保证「中/低档」才有资格）。
+disposition_gate:
+  redeclare_max_score: 0.8
+  max_severity_allowed: 3   # max_severity < 3 才允许重新申报

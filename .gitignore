@@ -1,0 +1,17 @@
+.env
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+logs/*.log
+data/index/*.json
+artifacts/models/*
+!artifacts/models/.gitkeep
+artifacts/features/*
+!artifacts/features/.gitkeep
+artifacts/reports/rollback/
+artifacts/reviews/*.jsonl
+.artifact-verify/

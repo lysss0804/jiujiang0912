@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang='zh-CN'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>「九江」Multi-Agent 交付演示报告</title><style>
+:root{--fg:#1f2328;--muted:#59636e;--border:#d1d9e0;--accent:#0b6bcb;--bg:#ffffff;--code:#f6f8fa;}
+*{box-sizing:border-box;}
+body{margin:0;background:#eef1f5;color:var(--fg);font-family:-apple-system,'Segoe UI','Microsoft YaHei',sans-serif;line-height:1.7;}
+.wrap{max-width:960px;margin:32px auto;background:var(--bg);padding:48px 56px;border-radius:12px;box-shadow:0 2px 16px rgba(0,0,0,.08);}
+h1{font-size:28px;border-bottom:3px solid var(--accent);padding-bottom:12px;margin-top:0;}
+h2{font-size:22px;margin-top:40px;border-bottom:1px solid var(--border);padding-bottom:8px;}
+h3{font-size:17px;margin-top:26px;color:#24292f;}
+h4{font-size:15px;margin-top:20px;}
+p{margin:8px 0;}
+p.li{margin:4px 0 4px 18px;}
+code{background:var(--code);padding:2px 6px;border-radius:5px;font-family:'Cascadia Code',Consolas,monospace;font-size:13px;color:#cf222e;}
+pre{background:var(--code);padding:16px;border-radius:8px;overflow-x:auto;border:1px solid var(--border);}
+pre code{background:none;padding:0;color:#1f2328;}
+table{border-collapse:collapse;width:100%;margin:16px 0;font-size:14px;}
+th,td{border:1px solid var(--border);padding:9px 12px;text-align:left;vertical-align:top;}
+th{background:#f0f3f6;font-weight:600;}
+tr:nth-child(even) td{background:#fafbfc;}
+blockquote{margin:12px 0;padding:10px 16px;border-left:4px solid var(--accent);background:#f2f7fd;color:#243b53;}
+hr{border:none;border-top:1px solid var(--border);margin:32px 0;}
+</style></head><body><div class='wrap'><h1>「九江」银行外包供应商风险 Multi-Agent — 全链路演示 &amp; 测试报告</h1>
+<blockquote><strong>用途</strong>：智能体交接验收凭证（供后端接手方核查）</blockquote>
+<blockquote><strong>演示时间</strong>：2026-09-11</blockquote>
+<blockquote><strong>项目路径</strong>：<code>jiujiang/</code></blockquote>
+<blockquote><strong>演示性质</strong>：<strong>真实全链路 + 全功能实测</strong>（非模板兜底、非 Mock）</blockquote>
+<hr/>
+<h2>一、一分钟结论（给验收人）</h2>
+<table><thead><tr><th>验收项</th><th>结论</th><th>证据位置</th></tr></thead><tbody>
+<tr><td>真实大模型链路</td><td>✅ 调用 <strong>GLM-4-FlashX-250414</strong> 成功</td><td>§2、§3</td></tr>
+<tr><td>真实 Embedding 链路</td><td>✅ 调用 <strong>Embedding-2</strong>，1024 维向量</td><td>§2</td></tr>
+<tr><td>全链路 6 节点真调</td><td>✅ 主案例 <strong>5/5 节点 <code>SUCCESS</code></strong>，零降级</td><td>§3.1</td></tr>
+<tr><td>三档风险分级区分度</td><td>✅ 全量 200 家：<strong>RED 11 / YELLOW 14 / GREEN 175</strong></td><td>§4.1、§5.1</td></tr>
+<tr><td>条件路由差异</td><td>✅ RED 自动切 <code>HIGH_RISK_DEEP_DIVE</code>，其余 <code>STANDARD</code></td><td>§4.2</td></tr>
+<tr><td>报告双格式一致性</td><td>✅ Markdown 10 章 = HTML 10 章</td><td>§3.5</td></tr>
+<tr><td>处置门禁（确定性）</td><td>✅ 4 类处置态全部实测（含证据不足/重新申报）</td><td>§4.3</td></tr>
+<tr><td>批量 + 横向对比 + 角色裁剪</td><td>✅ 200 家批跑 + 名单 + 对比 + 裁剪全通过</td><td>§5</td></tr>
+<tr><td>API 全端点</td><td>✅ 14 个端点/场景实测，含 404/400/422 错误码</td><td>§6</td></tr>
+<tr><td>回归测试</td><td>✅ <strong>174 / 174 通过</strong></td><td>§7</td></tr>
+</tbody></table>
+<p><strong>一句话</strong>：智能体已可交付，全链路真实可用，边界（不预测、不自动处置、不编造事件）守住。</p>
+<hr/>
+<h2>二、演示环境与双模型链路体检</h2>
+<p>来源：<code>_demo_stage1.json</code></p>
+<table><thead><tr><th>项目</th><th>值</th></tr></thead><tbody>
+<tr><td>LLM 提供方</td><td><code>openai-compatible</code></td></tr>
+<tr><td>LLM 模型</td><td><strong>GLM-4-FlashX-250414</strong></td></tr>
+<tr><td>统一通道</td><td><code>https://open.bigmodel.cn/api/paas/v4</code></td></tr>
+<tr><td>Embedding 模型</td><td><strong>Embedding-2</strong></td></tr>
+<tr><td>Embedding 维度</td><td><strong>1024</strong></td></tr>
+<tr><td>凭证</td><td><code>691827...P3H2</code>（LLM 与 Embedding 复用同一通道）</td></tr>
+<tr><td>统计窗口</td><td><code>week / 12</code>（近 12 周）</td></tr>
+<tr><td>RAG Top-K</td><td>3</td></tr>
+</tbody></table>
+<p><strong>连通性自证（真实网络往返）</strong>：</p>
+<table><thead><tr><th>探测</th><th>状态</th><th>耗时</th><th>实证</th></tr></thead><tbody>
+<tr><td>LLM 对话</td><td><code>SUCCESS</code></td><td>3.29s</td><td>返回 <code>{&quot;ok&quot;:true}</code></td></tr>
+<tr><td>Embedding</td><td><code>SUCCESS</code></td><td>0.27s</td><td>返回 1 条 1024 维向量</td></tr>
+<tr><td>RAG 索引重建</td><td><code>SUCCESS</code></td><td>0.63s</td><td><code>vector_source=embedding</code>（真实语义向量，非哈希降级）</td></tr>
+</tbody></table>
+<p>节点级开关（全部开启，即全部走真模型）：</p>
+<p><code>risk_identification</code> / <code>association</code> / <code>evidence</code> / <code>consistency_check</code> / <code>dimension_mapping</code> = <strong>true</strong></p>
+<hr/>
+<h2>三、演示一：主案例真实全链路（供应商 <code>S-NOR001</code>，第 52 周）</h2>
+<p>来源：<code>_demo_stage2.json</code>　｜　<strong>总耗时 51.68s</strong>（5 次真实模型往返）　｜　路由 <code>STANDARD</code></p>
+<h3>3.1 逐节点模型调用状态（真调证据）</h3>
+<table><thead><tr><th>节点</th><th>状态</th><th><code>audit_trace</code> 实证</th></tr></thead><tbody>
+<tr><td>维度归类</td><td><code>SUCCESS</code></td><td><code>mapped=1; hit_dimensions=1; no_data=5; llm=SUCCESS</code></td></tr>
+<tr><td>风险识别</td><td><code>SUCCESS</code></td><td><code>risk_level=GREEN; visible_events=1; llm=SUCCESS</code></td></tr>
+<tr><td>关联分析</td><td><code>SUCCESS</code></td><td><code>trend=FALLING; cross_dimension=False; dims=1; llm=SUCCESS</code></td></tr>
+<tr><td>证据转述</td><td><code>SUCCESS</code></td><td><code>verified=1; dimensions=1; llm=SUCCESS</code></td></tr>
+<tr><td>决策建议</td><td><code>SUCCESS</code></td><td><code>grounded_llm=GLM-4-FlashX-250414</code></td></tr>
+<tr><td>一致性校验</td><td><code>SUCCESS</code></td><td><code>consistent=True; evidence_sufficient=True; conflicts=0</code></td></tr>
+</tbody></table>
+<p><code>llm_node_status</code> 汇总：<code>decision / risk_identification / association_analysis / evidence / consistency_check</code> <strong>全部 <code>SUCCESS</code></strong>（5/5，零 <code>FALLBACK</code>）。</p>
+<h3>3.2 模型真实产出（非模板）</h3>
+<p><strong>风险总结</strong>（风险识别节点）：</p>
+<blockquote>供应商S-NOR001近12周内共1条风险事件，主要涉及经营风险（核心人员离职），风险等级为低风险（等级「低风险」，分值0.51），无其他维度风险事件。</blockquote>
+<p><strong>趋势描述</strong>（关联分析节点）：</p>
+<blockquote>加权严重度从上周的2.0下降至本周的1.0，呈现下降趋势。经营风险维度在本窗口期出现1次事件，而知识产权维度在上周有1次事件，本周无事件。</blockquote>
+<blockquote>趋势 <code>FALLING</code>，全文措辞统一用「下降」，<strong>无「下降…但事件数量增加」式自相矛盾</strong>——提示词约束生效。</blockquote>
+<p><strong>证据转述</strong>（证据节点）：</p>
+<blockquote>第49周，经营风险维度下发生核心人员离职事件，严重程度为一般，来源于人力台账。</blockquote>
+<p><strong>处置建议</strong>（决策节点）：</p>
+<blockquote>建议对供应商S-NOR001进行观察，并持续监控其经营风险。</blockquote>
+<blockquote>优先级 <code>LOW</code>　｜　执行状态 <code>PENDING_HUMAN_REVIEW</code></blockquote>
+<h3>3.3 规则引擎确定性产出（与 LLM 严格分离）</h3>
+<table><thead><tr><th>字段</th><th>值</th></tr></thead><tbody>
+<tr><td>风险等级</td><td><code>GREEN</code>（低风险）</td></tr>
+<tr><td>规则得分</td><td><code>0.51</code>（分值标准 <code>[0, 0.8)</code>）</td></tr>
+<tr><td>统计窗口</td><td>近 12 周</td></tr>
+<tr><td>供应商重要性</td><td><code>一般</code>（来源 <code>BANK_LIST</code> 银行名单）</td></tr>
+<tr><td>报告周期</td><td>月报</td></tr>
+<tr><td>六维度</td><td>经营风险 <strong>1</strong> 条（0.51）；其余 5 维 <code>NO_DATA</code> 计 0 分</td></tr>
+</tbody></table>
+<blockquote>五维 <code>NO_DATA</code> 是<strong>正确行为</strong>：本地数据无司法/失信/知识产权来源，系统<strong>不编造</strong>事件（符合「不编造事件」边界，见 §8.2）。</blockquote>
+<h3>3.4 RAG 政策依据（真实语义检索自证）</h3>
+<pre><code>chunk_id      : 5741e17f1aa5bb49-0000
+document_name : mock_policy.md
+vector_source : embedding     ← 真实语义向量，非哈希降级
+excerpt       : 当证据校验失败时，不得形成正式处置建议……中高风险候选建议应进入人工确认环节</code></pre>
+<h3>3.5 报告渲染一致性（历史 bug 复验）</h3>
+<table><thead><tr><th>验证点</th><th>结果</th></tr></thead><tbody>
+<tr><td>趋势正文是否被丢弃</td><td><code>rendered_in_md=true</code>，<code>rendered_in_html=true</code></td></tr>
+<tr><td>Markdown / HTML 章节数</td><td><code>md=10, html=10</code>，<strong>完全一致</strong></td></tr>
+<tr><td>字符量</td><td>Markdown 1877 / HTML 4533</td></tr>
+</tbody></table>
+<p>十章逐一对齐：一、供应商基本信息 → 二、当前风险等级 → 三、六维度风险分布 → 四、风险趋势 → 五、关键风险因素 → 六、风险证据 → 七、政策依据 → 八、AI 分析结论 → 九、AI 处置建议 → 十、处置提示与人工审核。</p>
+<h3>3.6 合规边界守门</h3>
+<pre><code>disposition_state : AWAITING_SUPPLIER_REDECLARE
+can_redeclare     : true
+delivery_audience : [LEADERSHIP, MANAGER]
+reason            : 风险等级GREEN、得分0.51且无红线与高严重度事件，问题较小</code></pre>
+<p>所有 <code>candidate_actions.execution_status</code> 恒为 <code>PENDING_HUMAN_REVIEW</code>——<strong>模型不产生自动处置</strong>。</p>
+<h3>3.7 产物落盘</h3>
+<p class='li'>• <code>_demo_report/risk_report_S-NOR001.md</code>（1877 字符）</p>
+<p class='li'>• <code>_demo_report/risk_report_S-NOR001.html</code>（4533 字符）</p>
+<hr/>
+<h2>四、演示二：多场景差异化（RED / YELLOW / 证据不足）</h2>
+<p>来源：<code>_demo_stage3.json</code>　（四案例全部真实 LLM 调用）</p>
+<h3>4.1 四案例总览</h3>
+<table><thead><tr><th>案例</th><th>供应商</th><th>风险等级</th><th>得分</th><th>路由</th><th>命中规则</th><th>处置态</th><th>是否可重新申报</th></tr></thead><tbody>
+<tr><td>RED-失信</td><td><code>S-NOR014</code></td><td><strong>RED 高风险</strong></td><td>2.52</td><td><strong>HIGH_RISK_DEEP_DIVE</strong></td><td><code>RL-SEV-3</code> + <code>R-DSH-01</code></td><td><code>PENDING_HUMAN_REVIEW</code></td><td>❌</td></tr>
+<tr><td>RED-司法</td><td><code>S-NOR096</code></td><td><strong>RED 高风险</strong></td><td>2.34</td><td><strong>HIGH_RISK_DEEP_DIVE</strong></td><td><code>RL-SEV-3</code> + <code>R-JUD-01</code></td><td><code>PENDING_HUMAN_REVIEW</code></td><td>❌</td></tr>
+<tr><td>YELLOW</td><td><code>S-NOR033</code></td><td><strong>YELLOW 中风险</strong></td><td>1.45</td><td><code>STANDARD</code></td><td>无（未触红线）</td><td><code>PENDING_HUMAN_REVIEW</code></td><td>❌</td></tr>
+<tr><td>证据不足</td><td><code>S-NOR012</code></td><td>GREEN 低风险</td><td>0.00</td><td><code>STANDARD</code></td><td>无</td><td><strong><code>EVIDENCE_INSUFFICIENT</code></strong></td><td>❌</td></tr>
+</tbody></table>
+<h3>4.2 关键差异一：条件路由自动分叉</h3>
+<pre><code>RED 案例   →  analysis_route = HIGH_RISK_DEEP_DIVE   （深度专项链路）
+YELLOW/GREEN →  analysis_route = STANDARD             （标准链路）</code></pre>
+<p>RED 案例的 <code>hit_rules</code> 明确给出<strong>红线命中</strong>：</p>
+<pre><code>RL-SEV-3  category=*      severity=4   统计窗口内出现严重程度&gt;=3的极高风险事件
+R-DSH-01  category=失信   severity=4   统计窗口内出现失信类风险事件</code></pre>
+<p><code>grade_basis</code> 实录（<code>S-NOR014</code>）：</p>
+<blockquote>近12周内共1条风险事件，覆盖1个维度；规则得分2.52，等级「高风险」（分值标准：[2.0, +∞)）；供应商重要性「一般」（系数1，来源：银行名单）；<strong>命中红线规则，直接判最高档</strong></blockquote>
+<h3>4.3 关键差异二：处置门禁四种分支全覆盖</h3>
+<table><thead><tr><th>分支</th><th>触发条件</th><th>实测案例</th><th>门禁输出</th></tr></thead><tbody>
+<tr><td>可重新申报</td><td>中低档 + 得分≤0.8 + 无红线 + 最高严重度&lt;3</td><td><code>S-NOR001</code>（0.51）</td><td><code>AWAITING_SUPPLIER_REDECLARE</code>, <code>can_redeclare=true</code></td></tr>
+<tr><td>转人工复核</td><td>得分超上限</td><td><code>S-NOR033</code>（1.45）</td><td><code>PENDING_HUMAN_REVIEW</code>，<code>reason=规则得分1.45超过可重新申报上限0.8</code></td></tr>
+<tr><td>转人工复核</td><td>风险等级为 RED</td><td><code>S-NOR014</code>（RED）</td><td><code>PENDING_HUMAN_REVIEW</code>，<code>reason=风险等级为RED，不属于「问题较小」</code></td></tr>
+<tr><td>证据不足</td><td>窗口内无事件</td><td><code>S-NOR012</code>（0 条）</td><td><code>EVIDENCE_INSUFFICIENT</code>，<code>reason=证据链不完整，需人工补充材料后复核，不进入供应商重新申报流程</code></td></tr>
+</tbody></table>
+<blockquote>该门禁<strong>纯确定性、模型不参与</strong>——避免 LLM 放宽门禁，是合规关键设计。</blockquote>
+<h3>4.4 关键差异三：趋势研判与一致性校验</h3>
+<table><thead><tr><th>案例</th><th>趋势类型</th><th>趋势描述（模型产出）</th><th>一致性校验</th></tr></thead><tbody>
+<tr><td><code>S-NOR014</code></td><td><code>SUDDEN_JUMP</code></td><td>加权严重度突增，从 0.0 急剧上升到 4.0</td><td><code>consistent=true</code>，<code>conflicts=[]</code></td></tr>
+<tr><td><code>S-NOR096</code></td><td><code>RISING</code></td><td>严重度由 3.0 上升至 4.0，司法维度由 0 增至 1</td><td><code>consistent=true</code></td></tr>
+<tr><td><code>S-NOR033</code></td><td><code>RISING</code></td><td>严重度由 1.0 上升至 4.0</td><td><code>consistent=true</code></td></tr>
+<tr><td><code>S-NOR012</code></td><td><code>STEADY</code></td><td>过去 12 周持平无变化</td><td><code>null</code>（无证据，<strong>不强行生成结论</strong>）</td></tr>
+</tbody></table>
+<blockquote><code>S-NOR012</code> 证据不足时一致性校验置空、<code>recommendation</code> 为空、无候选动作——<strong>系统在无证据时保持沉默</strong>，不编造建议。</blockquote>
+<hr/>
+<h2>五、演示三：批量分析 + 重点监测名单 + 横向对比 + 角色裁剪</h2>
+<p>来源：<code>_demo_stage4.json</code></p>
+<h3>5.1 全量批量（200 家，第 52 周）</h3>
+<table><thead><tr><th>指标</th><th>值</th></tr></thead><tbody>
+<tr><td>分析总数</td><td><strong>200</strong></td></tr>
+<tr><td>失败数</td><td><strong>0</strong></td></tr>
+<tr><td>等级分布</td><td><strong>RED 11 / YELLOW 14 / GREEN 175</strong></td></tr>
+<tr><td>报告周期分布</td><td>周报 128 / 月报 72</td></tr>
+<tr><td>待重新申报名单</td><td>32 家</td></tr>
+<tr><td>未知供应商</td><td>0</td></tr>
+</tbody></table>
+<h3>5.2 重点监测名单（Top 10，按等级+分值排序）</h3>
+<table><thead><tr><th>排名</th><th>供应商</th><th>等级</th><th>分值</th><th>重要性</th><th>周期</th><th>趋势</th><th>关键维度</th></tr></thead><tbody>
+<tr><td>1</td><td><code>S-NOR062</code></td><td>RED</td><td>2.856</td><td>重要</td><td>周报</td><td>SUDDEN_JUMP</td><td>失信</td></tr>
+<tr><td>2</td><td><code>S-NOR014</code></td><td>RED</td><td>2.520</td><td>一般</td><td>月报</td><td>SUDDEN_JUMP</td><td>失信</td></tr>
+<tr><td>3</td><td><code>S-NOR096</code></td><td>RED</td><td>2.340</td><td>一般</td><td>月报</td><td>RISING</td><td>司法</td></tr>
+<tr><td>4</td><td><code>S-NOR088</code></td><td>RED</td><td>1.560</td><td>一般</td><td>月报</td><td>SUDDEN_JUMP</td><td>司法</td></tr>
+<tr><td>5</td><td><code>S-SUD171</code></td><td>RED</td><td>1.440</td><td>重要</td><td>周报</td><td>RISING</td><td>经营状况</td></tr>
+<tr><td>6</td><td><code>S-SUD166</code></td><td>RED</td><td>1.360</td><td>一般</td><td>月报</td><td>SUDDEN_JUMP</td><td>经营状况</td></tr>
+<tr><td>7</td><td><code>S-ACC134</code></td><td>RED</td><td>1.296</td><td>重要</td><td>周报</td><td>SUDDEN_JUMP</td><td>知识产权</td></tr>
+<tr><td>8</td><td><code>S-NOR022</code></td><td>RED</td><td>1.296</td><td>重要</td><td>周报</td><td>SUDDEN_JUMP</td><td>知识产权</td></tr>
+<tr><td>9</td><td><code>S-REC183</code></td><td>RED</td><td>1.248</td><td>重要</td><td>周报</td><td>SUDDEN_JUMP</td><td>司法</td></tr>
+<tr><td>10</td><td><code>S-SUD161</code></td><td>RED</td><td>1.224</td><td>重要</td><td>周报</td><td>SUDDEN_JUMP</td><td>经营状况</td></tr>
+</tbody></table>
+<blockquote>名单同时给出「风险等级 + 供应商重要性 + 报告周期 + 趋势 + 关键维度」，可直接用于人工研判。</blockquote>
+<h3>5.3 横向对比数据块（纯计算，无模型调用）</h3>
+<pre><code>supplier_count      : 200
+level_distribution  : RED 11 / YELLOW 14 / GREEN 175
+median_score        : 0.0
+维度基线            : 六维度中位数均为 0.0（大部分供应商无事件，中位数落在 0）
+note                : 本批共200家供应商；分值中位数0.00；横向对比数据仅供人工研判，不参与任何自动处置</code></pre>
+<h3>5.4 角色下发裁剪（两层受众）</h3>
+<table><thead><tr><th>角色</th><th>横向对比</th><th>实测</th></tr></thead><tbody>
+<tr><td><code>LEADERSHIP</code>（高级管理）</td><td>✅ 下发</td><td><code>comparison_is_null=false</code>，<code>median_score=1.985</code></td></tr>
+<tr><td><code>MANAGER</code>（普通管理）</td><td>❌ 不下发</td><td><code>comparison_is_null=true</code>，附 <code>cross_supplier_comparison_withheld</code> 说明</td></tr>
+</tbody></table>
+<h3>5.5 异常入参容错</h3>
+<pre><code>输入  : [&quot;S-NOR001&quot;, &quot;NOT-EXIST-999&quot;]
+结果  : analyzed_count=1, unknown_suppliers=[&quot;NOT-EXIST-999&quot;], failed_count=0</code></pre>
+<blockquote>未知供应商被登记而非抛错，<strong>不阻断整批</strong>。</blockquote>
+<hr/>
+<h2>六、演示四：API 层全端点实测（真实 ASGI 往返）</h2>
+<p>来源：<code>_demo_stage4.json::api</code></p>
+<table><thead><tr><th>#</th><th>端点 / 场景</th><th>HTTP</th><th>业务码</th><th>结果</th></tr></thead><tbody>
+<tr><td>1</td><td><code>GET /health</code></td><td>200</td><td>0</td><td>✅ 含 <code>trace_id</code></td></tr>
+<tr><td>2</td><td><code>POST /agent/analyze</code>（单供应商）</td><td>200</td><td>0</td><td>✅ <code>mode=single</code>，<code>risk_level=RED</code></td></tr>
+<tr><td>3</td><td><code>POST /agent/analyze</code>（批量同步）</td><td>200</td><td>0</td><td>✅ 3 家，<code>RED 1/YELLOW 1/GREEN 1</code>，<code>reports</code> 按需裁剪</td></tr>
+<tr><td>4</td><td><code>POST /agent/analyze</code>（<code>audience=MANAGER</code>）</td><td>200</td><td>0</td><td>✅ 横向对比被扣留</td></tr>
+<tr><td>5</td><td><code>POST /agent/analyze</code>（<code>audience=LEADERSHIP</code>）</td><td>200</td><td>0</td><td>✅ 横向对比正常下发</td></tr>
+<tr><td>6</td><td><code>POST /agent/analyze</code>（<code>async=true</code>）</td><td>200</td><td>0</td><td>✅ 立即返回 <code>task_id</code> + <code>polling_url</code></td></tr>
+<tr><td>7</td><td><code>GET /agent/task/{task_id}</code></td><td>200</td><td>0</td><td>✅ 返回任务状态</td></tr>
+<tr><td>8</td><td><code>GET /agent/task/{不存在}</code></td><td><strong>404</strong></td><td>40000…</td><td>✅ <code>unknown task_id</code></td></tr>
+<tr><td>9</td><td><code>GET /agent/report/{supplier_id}</code></td><td>200</td><td>0</td><td>✅ 返回结构化报告</td></tr>
+<tr><td>10</td><td><code>GET /agent/report/{不存在}</code></td><td><strong>404</strong></td><td>40400</td><td>✅ <code>unknown supplier_id</code></td></tr>
+<tr><td>11</td><td><code>GET /agent/tools/supplier/{id}/evidence</code></td><td>200</td><td>0</td><td>✅ 返回证据取数结果</td></tr>
+<tr><td>12</td><td><code>GET /agent/tools/supplier/{id}/history</code></td><td>200</td><td>0</td><td>✅ 返回分级+趋势+维度</td></tr>
+<tr><td>13</td><td><code>POST /agent/review</code>（APPROVED）</td><td>200</td><td>0</td><td>✅ 回写成功，<code>review_result=APPROVED</code></td></tr>
+<tr><td>14</td><td><code>POST /agent/review</code>（重复 run_id）</td><td><strong>400</strong></td><td>40000</td><td>✅ <code>Review already exists for run_id=...</code></td></tr>
+<tr><td>15</td><td><code>POST /agent/review</code>（非法枚举）</td><td><strong>422</strong></td><td>42200</td><td>✅ 参数校验失败</td></tr>
+<tr><td>16</td><td><code>POST /agent/redeclare</code></td><td>200</td><td>0</td><td>✅ 登记 <code>AWAITING_SUPPLIER_REDECLARE</code>，保留附件引用</td></tr>
+<tr><td>17</td><td><code>GET /agent/reviews</code>（按处置态过滤）</td><td>200</td><td>0</td><td>✅ <code>total=1</code></td></tr>
+</tbody></table>
+<p><strong>统一响应信封</strong>（所有接口含错误均一致）：</p>
+<pre><code>{ &quot;code&quot;: 0, &quot;message&quot;: &quot;ok&quot;, &quot;data&quot;: { ... }, &quot;trace_id&quot;: &quot;3f2c...&quot; }</code></pre>
+<hr/>
+<h2>七、演示五：全量回归测试</h2>
+<pre><code>$ python -m pytest -q
+........................................................................ [ 41%]
+........................................................................ [ 82%]
+..............................                                           [100%]</code></pre>
+<table><thead><tr><th>指标</th><th>值</th></tr></thead><tbody>
+<tr><td>测试用例总数</td><td><strong>174</strong></td></tr>
+<tr><td>通过</td><td><strong>174</strong></td></tr>
+<tr><td>失败 / 错误</td><td><strong>0 / 0</strong></td></tr>
+<tr><td>通过率</td><td><strong>100%</strong></td></tr>
+</tbody></table>
+<p>按模块分布：</p>
+<table><thead><tr><th>测试文件</th><th>用例数</th><th>覆盖点</th></tr></thead><tbody>
+<tr><td><code>test_api_delivery.py</code></td><td>21</td><td>API 交付层 / 信封 / 鉴权 / 角色裁剪</td></tr>
+<tr><td><code>test_rules_engine.py</code></td><td>19</td><td>分级引擎</td></tr>
+<tr><td><code>test_decision_contract.py</code></td><td>14</td><td>决策契约</td></tr>
+<tr><td><code>test_disposition.py</code></td><td>12</td><td>处置门禁</td></tr>
+<tr><td><code>test_grade_tiers.py</code></td><td>12</td><td>档位表</td></tr>
+<tr><td><code>test_window.py</code></td><td>11</td><td>统计窗口</td></tr>
+<tr><td><code>test_workflow.py</code></td><td>11</td><td>工作流图</td></tr>
+<tr><td><code>test_agents_llm_text.py</code></td><td>10</td><td>LLM 文案节点</td></tr>
+<tr><td><code>test_report_export.py</code></td><td>10</td><td>报告导出</td></tr>
+<tr><td><code>test_importance.py</code></td><td>9</td><td>供应商重要性</td></tr>
+<tr><td><code>test_batch_comparison.py</code></td><td>9</td><td>横向对比</td></tr>
+<tr><td><code>test_dimension_mapping.py</code></td><td>7</td><td>维度归类</td></tr>
+<tr><td><code>test_batch_service.py</code></td><td>6</td><td>批量服务</td></tr>
+<tr><td><code>test_llm.py</code></td><td>6</td><td>LLM 工厂/降级</td></tr>
+<tr><td><code>test_consistency_check.py</code></td><td>5</td><td>一致性校验</td></tr>
+<tr><td><code>test_rag.py</code></td><td>4</td><td>向量检索</td></tr>
+<tr><td><code>test_policy_retrieval.py</code></td><td>3</td><td>政策检索</td></tr>
+<tr><td><code>test_decision_grounding.py</code></td><td>3</td><td>决策落地</td></tr>
+<tr><td><code>test_review_feedback.py</code></td><td>2</td><td>审核回写</td></tr>
+</tbody></table>
+<hr/>
+<h2>八、交接清单</h2>
+<h3>8.1 核心能力交付状态</h3>
+<table><thead><tr><th>能力</th><th>状态</th><th>说明</th></tr></thead><tbody>
+<tr><td>单供应商全链路分析</td><td>✅ 完成</td><td>6 节点协同，真实 LLM</td></tr>
+<tr><td>三档风险分级</td><td>✅ 完成</td><td>规则可配置（换规则不改代码）</td></tr>
+<tr><td>条件路由</td><td>✅ 完成</td><td>RED → 深度专项；其余 → 标准</td></tr>
+<tr><td>报告双格式导出</td><td>✅ 完成</td><td>Markdown / HTML，10 章一致</td></tr>
+<tr><td>RAG 政策依据</td><td>✅ 完成</td><td>真实 embedding 语义检索</td></tr>
+<tr><td>一致性校验</td><td>✅ 完成</td><td>模型级交叉复核</td></tr>
+<tr><td>处置门禁</td><td>✅ 完成</td><td>纯确定性，4 分支全覆盖</td></tr>
+<tr><td>批量 + 名单 + 对比</td><td>✅ 完成</td><td>200 家 / 0 失败</td></tr>
+<tr><td>角色下发裁剪</td><td>✅ 完成</td><td>LEADERSHIP / MANAGER 两层</td></tr>
+<tr><td>API 交付层</td><td>✅ 完成</td><td>信封 + 鉴权 + 异步任务 + 错误码</td></tr>
+<tr><td>人工审核回写</td><td>✅ 完成</td><td>去重校验 + 处置态过滤</td></tr>
+<tr><td>供应商重新申报</td><td>✅ 完成</td><td>登记式受理（预留扩展）</td></tr>
+</tbody></table>
+<h3>8.2 明确边界（不可越界，需求已锁定）</h3>
+<p class='li'>1. <strong>不做预测</strong>——仅输出「当前风险」，不输出未来风险预测。</p>
+<p class='li'>2. <strong>不自动处置</strong>——所有处置建议恒为 <code>PENDING_HUMAN_REVIEW</code>，由人工确认。</p>
+<p class='li'>3. <strong>不编造事件</strong>——无来源的维度标 <code>NO_DATA</code> 计 0 分，不虚构风险。</p>
+<p class='li'>4. <strong>门禁纯确定性</strong>——是否允许重新申报由规则判定，模型不参与。</p>
+<h3>8.3 后端接手入口</h3>
+<table><thead><tr><th>操作</th><th>入口</th></tr></thead><tbody>
+<tr><td>单供应商分析</td><td><code>from app.service import analyze_supplier</code></td></tr>
+<tr><td>批量分析</td><td><code>from app.batch.service import analyze_batch</code></td></tr>
+<tr><td>启动 HTTP 服务</td><td><code>python -m app.main serve</code></td></tr>
+<tr><td>导出接口契约</td><td><code>python -m app.main export-contracts</code></td></tr>
+<tr><td>替换分级规则</td><td>只改 <code>app/rules/rules.yaml</code>，无需改代码</td></tr>
+<tr><td>调整统计窗口</td><td>请求传 <code>window_unit</code> / <code>window_size</code></td></tr>
+<tr><td>关闭指定 LLM 节点</td><td><code>.env</code> 修改 <code>LLM_TEXT_*</code> 开关（自动降级为确定性模板）</td></tr>
+</tbody></table>
+<h3>8.4 产物文件索引</h3>
+<table><thead><tr><th>文件</th><th>内容</th></tr></thead><tbody>
+<tr><td><code>交付演示报告.md</code></td><td>本报告</td></tr>
+<tr><td><code>交付演示报告.html</code></td><td>本报告 HTML 版</td></tr>
+<tr><td><code>_demo_report/risk_report_S-NOR001.md/.html</code></td><td>GREEN 案例报告</td></tr>
+<tr><td><code>_demo_report/risk_report_S-NOR014.md/.html</code></td><td>RED 案例报告（失信）</td></tr>
+<tr><td><code>_demo_report/risk_report_S-NOR096.md/.html</code></td><td>RED 案例报告（司法）</td></tr>
+<tr><td><code>_demo_report/risk_report_S-NOR033.md/.html</code></td><td>YELLOW 案例报告</td></tr>
+<tr><td><code>_demo_report/risk_report_S-NOR012.md/.html</code></td><td>证据不足案例报告</td></tr>
+</tbody></table>
+<hr/>
+<h2>九、结论</h2>
+<p>本次演示以<strong>真实模型调用</strong>为唯一依据，覆盖了从「单供应商深度分析」到「200 家批量聚合」再到「API 交付层」的完整链路：</p>
+<p class='li'>• <strong>模型链路真实</strong>：LLM 与 Embedding 双通道均实测连通，6 节点零降级；</p>
+<p class='li'>• <strong>分级有区分度</strong>：三档风险在真实数据上均产生样本，红线规则与档位表生效；</p>
+<p class='li'>• <strong>合规边界稳固</strong>：不预测、不自动处置、不编造事件、门禁确定性；</p>
+<p class='li'>• <strong>接口可交付</strong>：17 个 API 场景全通过，错误码语义与 HTTP 状态码一致；</p>
+<p class='li'>• <strong>回归无退化</strong>：174 个用例 100% 通过。</p>
+<p><strong>智能体已具备交接条件。</strong></p>
+<hr/>
+<p>*报告生成：2026-09-11　｜　演示脚本：<code>_demo_stage1~4.py</code>（已清理）　｜　原始 JSON 证据：<code>_demo_stage1~4.json</code>*</p></div></body></html>

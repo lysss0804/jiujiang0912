@@ -1,0 +1,5 @@
+evidence_id,supplier_id,event_category,event_subtype,event_severity,event_week,source_type
+E-M001,S-MOCK-01,履约,项目延期,2,4,内部巡检
+E-M002,S-MOCK-01,人员,核心人员离职,3,8,人力台账
+E-M003,S-MOCK-01,安全,模拟漏洞事件,3,12,安全公告
+

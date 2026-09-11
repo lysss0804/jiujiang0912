@@ -1,0 +1,109 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "reviewer_id": {
+      "maxLength": 100,
+      "minLength": 1,
+      "title": "Reviewer Id",
+      "type": "string"
+    },
+    "review_result": {
+      "enum": [
+        "APPROVED",
+        "REJECTED",
+        "NEED_MORE_EVIDENCE",
+        "REDECLARED"
+      ],
+      "title": "Review Result",
+      "type": "string"
+    },
+    "final_action": {
+      "anyOf": [
+        {
+          "enum": [
+            "observe",
+            "alert",
+            "rectify"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Final Action"
+    },
+    "review_comment": {
+      "default": "",
+      "maxLength": 1000,
+      "title": "Review Comment",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "C-DRAFT-V0.2",
+      "default": "C-DRAFT-V0.2",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "risk_level": {
+      "anyOf": [
+        {
+          "enum": [
+            "RED",
+            "YELLOW",
+            "GREEN"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Risk Level"
+    },
+    "disposition_state": {
+      "anyOf": [
+        {
+          "enum": [
+            "PENDING_HUMAN_REVIEW",
+            "EVIDENCE_INSUFFICIENT",
+            "AWAITING_SUPPLIER_REDECLARE"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Disposition State"
+    },
+    "review_id": {
+      "title": "Review Id",
+      "type": "string"
+    },
+    "run_id": {
+      "title": "Run Id",
+      "type": "string"
+    },
+    "supplier_id": {
+      "title": "Supplier Id",
+      "type": "string"
+    },
+    "reviewed_at": {
+      "format": "date-time",
+      "title": "Reviewed At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "reviewer_id",
+    "review_result",
+    "run_id",
+    "supplier_id"
+  ],
+  "title": "HumanReviewRecord",
+  "type": "object"
+}

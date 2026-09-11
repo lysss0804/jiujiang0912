@@ -1,0 +1,52 @@
+{
+  "env": {
+    "llm_provider": "openai-compatible",
+    "llm_model": "GLM-4-FlashX-250414",
+    "llm_base_url": "https://open.bigmodel.cn/api/paas/v4",
+    "llm_api_key": "691827...P3H2(len=49)",
+    "embedding_provider": "openai-compatible",
+    "embedding_model": "Embedding-2",
+    "embedding_api_key_effective": "691827...P3H2(len=49)",
+    "embedding_dimensions": 1024,
+    "window_unit": "week",
+    "window_size": 12,
+    "rag_top_k": 3,
+    "llm_node_switches": {
+      "risk_identification": true,
+      "association": true,
+      "evidence": true,
+      "consistency_check": true,
+      "dimension_mapping": true
+    }
+  },
+  "llm_probe": {
+    "status": "SUCCESS",
+    "elapsed_s": 3.29,
+    "raw_prefix": "{\"ok\":true}"
+  },
+  "embedding_probe": {
+    "status": "SUCCESS",
+    "elapsed_s": 0.27,
+    "count": 1,
+    "dimensions": 1024,
+    "head": [
+      0.02215,
+      0.07371,
+      0.04141,
+      -0.01243
+    ]
+  },
+  "rag_rebuild": {
+    "status": "SUCCESS",
+    "elapsed_s": 0.63,
+    "indexed_chunks": 1,
+    "vector_source": "embedding",
+    "hits": [
+      {
+        "chunk_id": "5741e17f1aa5bb49-0000",
+        "score": 0.49023,
+        "vector_source": "embedding"
+      }
+    ]
+  }
+}
