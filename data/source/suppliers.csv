@@ -1,4 +1,4 @@
-﻿supplier_id,name,importance_level
+﻿supplier_id,supplier_name,importance_tier
 S‑NOR001,NOR服务商001,一般
 S‑NOR002,NOR服务商002,重要
 S‑NOR003,NOR服务商003,重要
