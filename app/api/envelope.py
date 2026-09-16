@@ -26,6 +26,7 @@ class ErrorCode:
     OK = 0
     INVALID_REQUEST = 40000
     UNAUTHORIZED = 40100
+    FORBIDDEN = 40300
     NOT_FOUND = 40400
     UNPROCESSABLE = 42200
     INTERNAL_ERROR = 50000
@@ -36,6 +37,7 @@ HTTP_STATUS_BY_CODE: dict[int, int] = {
     ErrorCode.OK: 200,
     ErrorCode.INVALID_REQUEST: 400,
     ErrorCode.UNAUTHORIZED: 401,
+    ErrorCode.FORBIDDEN: 403,
     ErrorCode.NOT_FOUND: 404,
     ErrorCode.UNPROCESSABLE: 422,
     ErrorCode.INTERNAL_ERROR: 500,

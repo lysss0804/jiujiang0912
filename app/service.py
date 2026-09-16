@@ -28,7 +28,7 @@ def analyze_supplier(
     supplier_id: str,
     current_week: int | None = None,
     source_dir: Path | str | None = None,
-    enable_live_llm: bool = False,
+    enable_live_llm: bool = True,
     run_id: str | None = None,
     window_unit: str | None = None,
     window_size: int | None = None,
@@ -64,6 +64,53 @@ def analyze_supplier(
                 "risk_score": float(weekly.get("risk_score", 0.0)),
                 "business_exposure": float(weekly.get("business_exposure", 0.0)),
                 "event_count": int(weekly.get("event_count", 0)),
+                "has_rectify": is_in_rectify(rectifies, week),
+            },
+            "enable_live_llm": enable_live_llm,
+            "status": "CREATED",
+            "errors": [],
+            "audit_trace": [],
+        }
+    )
+
+
+def analyze_supplier_snapshot(
+    *,
+    supplier_id: str,
+    snapshot: dict[str, Any],
+    current_week: int | None = None,
+    enable_live_llm: bool = True,
+    run_id: str | None = None,
+    window_unit: str | None = None,
+    window_size: int | None = None,
+) -> dict[str, Any]:
+    """用后端生成的只读数据快照执行分析。
+
+    这是生产取数边界：调用方已经从数据库完成权限过滤、版本固定与证据关联；
+    智能体只读取 ``snapshot``，不会连接业务数据库或修改任何业务数据。
+    """
+    profile = dict(snapshot.get("supplier_profile") or {})
+    if not profile:
+        raise ValueError("snapshot.supplier_profile is required")
+    events = [dict(item) for item in snapshot.get("events", [])]
+    week = int(current_week or snapshot.get("max_week") or max((int(item.get("event_week", 0)) for item in events), default=1))
+    visible_events = [item for item in events if int(item.get("event_week", 0)) <= week]
+    rectifies = list(snapshot.get("rectifies") or [])
+    weekly = dict((snapshot.get("weekly") or {}).get(week, {}))
+    return _workflow().invoke(
+        {
+            "run_id": run_id or str(uuid4()),
+            "supplier_id": supplier_id,
+            "current_week": week,
+            "window_unit": window_unit,
+            "window_size": window_size,
+            "events": visible_events,
+            "rectifies": rectifies,
+            "supplier_profile": profile,
+            "business_context": {
+                "risk_score": float(weekly.get("risk_score", 0.0)),
+                "business_exposure": float(weekly.get("business_exposure", 0.0)),
+                "event_count": int(weekly.get("event_count", len(visible_events))),
                 "has_rectify": is_in_rectify(rectifies, week),
             },
             "enable_live_llm": enable_live_llm,

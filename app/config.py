@@ -10,8 +10,10 @@ class Settings(BaseSettings):
 
     app_env: str = "development"
     log_level: str = "INFO"
-    llm_provider: str = "mock"
-    llm_model: str = "mock-model"
+    # 默认尝试真实 OpenAI 兼容模型；部署时必须在环境变量中提供模型、地址和密钥。
+    # 若未配置或调用失败，各节点仍按既有降级规则生成确定性报告。
+    llm_provider: str = "openai-compatible"
+    llm_model: str = ""
     llm_api_key: str = ""
     llm_base_url: str = ""
     llm_timeout_seconds: float = Field(default=30.0, gt=0)
@@ -43,6 +45,13 @@ class Settings(BaseSettings):
     vector_index_path: Path = Path("data/index/vector_index.json")
     source_data_dir: Path = Path("data/source")
 
+    # ---- 传统后端持久化 ----
+    # 本地联调默认 SQLite；生产切换到 PostgreSQL 时执行 db/schema_v1_postgresql.sql，
+    # 并由部署侧提供 PostgreSQL 仓储实现/连接池。
+    database_url: str = "sqlite:///data/jiujiang_backend.db"
+    upload_dir: Path = Path("data/uploads")
+    document_converter_command: str = ""  # 可选：部署侧配置 LibreOffice/受控转换服务
+
     # ---- 风险分级规则引擎 ----
     rules_config_path: Path = Path("app/rules/rules.yaml")
     # 「近期」统计窗口：可指定单位（week / month）与窗口大小
@@ -72,6 +81,10 @@ class Settings(BaseSettings):
     # 留空表示不鉴权（本地联调 / 自动化测试）；配置后所有接口需携带 X-API-Key
     api_key: str = ""
     api_cors_origins: str = ""
+    integration_mock_mode: bool = True
+    # 设为 true 后，/backend 中已接入 RBAC 的资源接口要求 X-User-Id。
+    # 用户身份必须由网关/SSO/JWT 验证后注入，不能由前端自行伪造。
+    rbac_enforced: bool = False
 
     workflow_version: str = "0.2.0-draft"
     prompt_version: str = "0.2.0-draft"

@@ -24,9 +24,10 @@ from typing import Any, Literal
 from fastapi import Depends, FastAPI, Path as PathParam, Query, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, ValidationError
 
-from app.api.deps import get_trace_id, require_api_key
+from app.api.deps import ForbiddenError, get_trace_id, require_api_key
 from app.api.envelope import ErrorCode, fail, http_status_for, ok
 from app.api.task_store import task_store
 from app.batch.service import analyze_batch
@@ -54,6 +55,22 @@ app = FastAPI(
     dependencies=[Depends(require_api_key)],
 )
 
+_cors_origins = [item.strip() for item in get_settings().api_cors_origins.split(",") if item.strip()]
+if _cors_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=_cors_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+# 传统后端能力与既有 /agent 算法服务并存。前者负责数据库、导入与调度，
+# 后者保留为算法/智能体契约，避免智能体直连业务数据库。
+from app.backend.api import router as backend_router
+
+app.include_router(backend_router)
+
 
 # --------------------------------------------------------------------------- #
 # 请求模型
@@ -61,7 +78,7 @@ app = FastAPI(
 class AnalyzeRequest(BaseModel):
     supplier_ids: list[str] = Field(default_factory=list, description="留空则分析全部供应商")
     current_week: int | None = Field(default=None, ge=1, le=52, description="留空则取数据中最大周次")
-    enable_live_llm: bool = Field(default=False, description="是否启用真实大模型（需在线 API Key）")
+    enable_live_llm: bool = Field(default=True, description="默认尝试真实大模型；不可用时自动回退确定性文案")
     include_reports: bool = Field(default=True, description="是否在响应中返回全部报告（同步批量模式生效）")
     watchlist_size: int = Field(default=10, ge=1, le=100)
     async_mode: bool = Field(default=False, alias="async", description="true 时批量分析转异步，立即返回 task_id")
@@ -167,6 +184,7 @@ async def _domain_handler(request: Request, exc: JiujiangError) -> JSONResponse:
     code = {
         "DataValidationError": ErrorCode.INVALID_REQUEST,
         "UnauthorizedError": ErrorCode.UNAUTHORIZED,
+        "ForbiddenError": ErrorCode.FORBIDDEN,
         "UnknownSupplierError": ErrorCode.NOT_FOUND,
         "UnknownTaskError": ErrorCode.NOT_FOUND,
     }.get(type(exc).__name__, ErrorCode.INTERNAL_ERROR)

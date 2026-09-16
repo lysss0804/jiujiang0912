@@ -149,7 +149,7 @@ def analyze_batch(
     supplier_ids: list[str] | None = None,
     current_week: int | None = None,
     source_dir: Path | str | None = None,
-    enable_live_llm: bool = False,
+    enable_live_llm: bool = True,
     max_workers: int | None = None,
     watchlist_size: int = 10,
     window_unit: str | None = None,

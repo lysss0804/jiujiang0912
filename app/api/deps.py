@@ -14,6 +14,10 @@ class UnauthorizedError(JiujiangError):
     """缺少或错误的 API Key。"""
 
 
+class ForbiddenError(JiujiangError):
+    """已认证身份没有访问目标资源的权限。"""
+
+
 def make_trace_id() -> str:
     return uuid4().hex
 
@@ -42,4 +46,4 @@ async def require_api_key(
     return x_api_key
 
 
-__all__ = ["UnauthorizedError", "make_trace_id", "get_trace_id", "require_api_key"]
+__all__ = ["UnauthorizedError", "ForbiddenError", "make_trace_id", "get_trace_id", "require_api_key"]
