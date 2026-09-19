@@ -74,7 +74,17 @@ def load_supplier_dataset(source_dir: str | None = None) -> dict[str, Any]:
         if not (base / filename).exists():
             raise DataValidationError(f"Missing source file: {filename}")
 
-    suppliers = {row["supplier_id"]: row for row in _read_csv(base / "suppliers.csv")}
+    # Accept both the original algorithm-side headers (name,
+    # importance_level) and the backend import headers (supplier_name,
+    # importance).  The shared fixture was intentionally aligned with the
+    # backend CSV template, so the loader normalizes it at this boundary.
+    supplier_rows = _read_csv(base / "suppliers.csv")
+    for row in supplier_rows:
+        row["name"] = (row.get("name") or row.get("supplier_name") or "").strip()
+        row["importance_level"] = (
+            row.get("importance_level") or row.get("importance") or ""
+        ).strip()
+    suppliers = {row["supplier_id"]: row for row in supplier_rows}
     # 银行名单定义的两级重要性（重要/一般）。列缺失时视为空，自动走 DERIVED 合成回退。
     importance_by_supplier = {
         supplier_id: (row.get("importance_level") or "").strip()

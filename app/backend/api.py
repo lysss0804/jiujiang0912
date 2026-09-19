@@ -20,6 +20,7 @@ from app.backend.document_conversion import convert_docx
 from app.backend.imports import save_upload, validate_event_csv, validate_supplier_csv
 from app.backend.official_api import sync_source
 from app.backend.mock_service import bootstrap_frontend_demo, mock_login
+from app.data.loader import canonical_supplier_ids, load_supplier_dataset, normalize_supplier_id
 from app.reporting.renderer import render_html, render_markdown
 from app.config import get_settings
 from app.service import analyze_supplier_snapshot
@@ -66,6 +67,15 @@ class AnalyzeMonitorRequest(BaseModel):
     enable_live_llm: bool = True
     window_unit: Literal["week", "month"] | None = None
     window_size: int | None = Field(default=None, ge=1, le=52)
+
+
+class RefreshRiskStateRequest(AnalyzeMonitorRequest):
+    supplier_ids: list[str] = Field(default_factory=list, max_length=1000)
+    limit: int = Field(default=1000, ge=1, le=1000)
+    input_source: Literal["AUTO", "DATABASE", "PROVIDED_DATA"] = "AUTO"
+    # A full refresh can span hundreds of suppliers.  Keep deterministic
+    # scoring/report generation as the safe default; callers may opt in.
+    enable_live_llm: bool = False
 
 
 class SourceRequest(BaseModel):
@@ -419,6 +429,66 @@ def _analyze_monitor(monitor_id: str, request: AnalyzeMonitorRequest) -> dict[st
         raise
 
 
+def _provided_data_snapshot(supplier_id: str) -> dict[str, Any] | None:
+    """Build a snapshot from the repository-provided integration dataset."""
+    normalized_id = normalize_supplier_id(supplier_id)
+    resolved = canonical_supplier_ids().get(normalized_id)
+    if resolved is None:
+        return None
+    dataset = load_supplier_dataset()
+    profile = dict(dataset["profile_by_supplier"].get(resolved, {}))
+    profile["supplier_id"] = normalized_id
+    events = [dict(item) for item in dataset["events_by_supplier"].get(resolved, [])]
+    for event in events:
+        event["supplier_id"] = normalized_id
+    return {
+        "supplier_profile": profile,
+        "events": events,
+        "rectifies": list(dataset["rectifies_by_supplier"].get(resolved, [])),
+        "weekly": dict(dataset["weekly_by_supplier"].get(resolved, {})),
+        "max_week": int(dataset["max_week"]),
+    }
+
+
+def _analyze_refresh_task(
+    task: dict[str, Any], request: RefreshRiskStateRequest
+) -> tuple[dict[str, Any], str]:
+    repo = repository()
+    db_task, database_snapshot = repo.snapshot_for_monitor(task["monitor_id"])
+    provided_snapshot = None
+    if request.input_source in {"AUTO", "PROVIDED_DATA"}:
+        provided_snapshot = _provided_data_snapshot(task["supplier_id"])
+    if request.input_source == "PROVIDED_DATA" and provided_snapshot is None:
+        raise ValueError(f"supplier is not present in provided source data: {task['supplier_id']}")
+    use_provided = provided_snapshot is not None and (
+        request.input_source == "PROVIDED_DATA"
+        or (request.input_source == "AUTO" and not database_snapshot.get("events"))
+    )
+    snapshot = provided_snapshot if use_provided else database_snapshot
+    input_source = "PROVIDED_DATA" if use_provided else "DATABASE"
+    analysis_run_id, run_id = repo.create_analysis_run(task["monitor_id"], snapshot)
+    try:
+        state = analyze_supplier_snapshot(
+            supplier_id=db_task["supplier_id"],
+            snapshot=snapshot,
+            current_week=request.current_week,
+            enable_live_llm=request.enable_live_llm,
+            run_id=run_id,
+            window_unit=request.window_unit,
+            window_size=request.window_size,
+        )
+        identifiers = repo.persist_analysis(analysis_run_id, state)
+        return {
+            "monitor_id": task["monitor_id"],
+            "run_id": run_id,
+            **identifiers,
+            "report": state["risk_report"],
+        }, input_source
+    except Exception as exc:
+        repo.mark_analysis_failed(analysis_run_id, exc)
+        raise
+
+
 @router.post("/monitoring/dispatch-due", summary="生成到期监控任务，可选择立即分析")
 def dispatch_due_monitoring(request: DispatchRequest, raw: Request) -> Any:
     _authorize(raw, "monitor.run")
@@ -443,6 +513,48 @@ def list_monitor_tasks(raw: Request) -> Any:
 def analyze_monitor(monitor_id: str, request: AnalyzeMonitorRequest, raw: Request) -> Any:
     _authorize(raw, "monitor.run")
     return ok(_analyze_monitor(monitor_id, request), get_trace_id(raw))
+
+
+@router.post("/monitoring/refresh-risk-state", summary="全量或按供应商刷新数据库风险状态")
+def refresh_risk_state(request: RefreshRiskStateRequest, raw: Request) -> Any:
+    """Run one-off analyses and persist levels used by the dashboard.
+
+    Unlike periodic dispatch, this endpoint does not advance weekly/monthly
+    schedules.  Failures are isolated per supplier so a bad record does not
+    discard successful refreshes for the rest of the batch.
+    """
+    _authorize(raw, "monitor.run")
+    tasks = repository().create_manual_monitoring_tasks(
+        supplier_ids=request.supplier_ids or None,
+        limit=request.limit,
+    )
+    successes: list[dict[str, Any]] = []
+    failures: list[dict[str, str]] = []
+    for task in tasks:
+        try:
+            result, input_source = _analyze_refresh_task(task, request)
+            successes.append(
+                {
+                    "supplier_id": task["supplier_id"],
+                    "monitor_id": task["monitor_id"],
+                    "report_id": result["report_id"],
+                    "risk_level": result["report"]["risk_grade"]["risk_level"],
+                    "risk_score": result["report"]["risk_grade"]["score"],
+                    "input_source": input_source,
+                }
+            )
+        except Exception as exc:
+            failures.append({"supplier_id": task["supplier_id"], "monitor_id": task["monitor_id"], "error": str(exc)})
+    return ok(
+        {
+            "requested_count": len(tasks),
+            "success_count": len(successes),
+            "failure_count": len(failures),
+            "analyses": successes,
+            "failures": failures,
+        },
+        get_trace_id(raw),
+    )
 
 
 @router.get("/reports/{report_id}", summary="查询持久化风险报告")

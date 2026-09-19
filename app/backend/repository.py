@@ -216,6 +216,61 @@ class RiskRepository:
             db.execute("COMMIT")
         return created
 
+    def create_manual_monitoring_tasks(
+        self,
+        *,
+        supplier_ids: list[str] | None = None,
+        limit: int = 1000,
+    ) -> list[dict[str, Any]]:
+        """Create one-off analysis tasks without changing periodic schedules.
+
+        This is used after a bulk supplier/risk-event import to backfill the
+        database risk state.  It deliberately does not advance ``next_due_at``;
+        the normal weekly/monthly monitoring cadence remains unchanged.
+        """
+        if not 1 <= limit <= 1000:
+            raise ValueError("limit must be between 1 and 1000")
+        requested = None
+        if supplier_ids:
+            requested = {normalize_supplier_id(item) for item in supplier_ids}
+        now = _now()
+        created: list[dict[str, Any]] = []
+        with connect(self.database_url) as db:
+            rows = db.execute(
+                """SELECT s.supplier_id,
+                          (SELECT a.assignment_id FROM supplier_monitor_assignment a
+                           WHERE a.supplier_id=s.supplier_id AND a.enabled=1
+                           ORDER BY a.created_at LIMIT 1) AS assignment_id
+                   FROM supplier s WHERE s.status='ACTIVE' ORDER BY s.supplier_id"""
+            ).fetchall()
+            selected = [row for row in rows if requested is None or row["supplier_id"] in requested]
+            if requested is not None:
+                found = {row["supplier_id"] for row in selected}
+                missing = sorted(requested - found)
+                if missing:
+                    raise ValueError(f"unknown or inactive supplier_ids: {', '.join(missing)}")
+            db.execute("BEGIN")
+            try:
+                for row in selected[:limit]:
+                    monitor_id = _new_id()
+                    db.execute(
+                        """INSERT INTO monitor_task(monitor_id, supplier_id, assignment_id, monitor_type, status, scheduled_at, data_version)
+                           VALUES (?, ?, ?, 'MANUAL', 'PENDING', ?, ?)""",
+                        (
+                            monitor_id,
+                            row["supplier_id"],
+                            row["assignment_id"],
+                            _iso(now),
+                            f"manual-refresh-{now.strftime('%Y%m%d%H%M%S')}",
+                        ),
+                    )
+                    created.append({"monitor_id": monitor_id, "supplier_id": row["supplier_id"], "monitor_type": "MANUAL"})
+                db.execute("COMMIT")
+            except Exception:
+                db.execute("ROLLBACK")
+                raise
+        return created
+
     def snapshot_for_monitor(self, monitor_id: str) -> tuple[dict[str, Any], dict[str, Any]]:
         with connect(self.database_url) as db:
             task = db.execute("SELECT * FROM monitor_task WHERE monitor_id=?", (monitor_id,)).fetchone()
@@ -730,17 +785,52 @@ class RiskRepository:
         allowed = {normalize_supplier_id(item) for item in supplier_ids} if supplier_ids else None
         suppliers = [item for item in self.list_suppliers() if item["status"] == "ACTIVE" and (allowed is None or item["supplier_id"] in allowed)]
         supplier_set = {item["supplier_id"] for item in suppliers}
-        levels = {level: sum(item["current_risk_level"] == level for item in suppliers) for level in ("RED", "YELLOW", "GREEN")}
+        # ``supplier.current_risk_level`` is a convenient cache, but imported
+        # suppliers start as GREEN.  Prefer the latest persisted rule-engine
+        # result so a stale cache can never corrupt dashboard statistics.
+        latest_results: dict[str, dict[str, Any]] = {}
+        with connect(self.database_url) as db:
+            result_rows = db.execute(
+                """SELECT supplier_id, risk_level, risk_score, created_at
+                   FROM risk_result ORDER BY created_at DESC, rowid DESC"""
+            ).fetchall()
+            review_rows = db.execute("SELECT supplier_id, human_review_status FROM risk_report").fetchall()
+        for row in result_rows:
+            latest_results.setdefault(row["supplier_id"], dict(row))
+        effective_suppliers: list[dict[str, Any]] = []
+        for supplier in suppliers:
+            item = dict(supplier)
+            latest = latest_results.get(item["supplier_id"])
+            if latest:
+                item["current_risk_level"] = latest["risk_level"]
+                item["current_risk_score"] = latest["risk_score"]
+                item["risk_state_source"] = "LATEST_RISK_RESULT"
+                item["risk_evaluated_at"] = latest["created_at"]
+            else:
+                item["current_risk_score"] = 0.0
+                item["risk_state_source"] = "SUPPLIER_DEFAULT"
+                item["risk_evaluated_at"] = None
+            effective_suppliers.append(item)
+        levels = {level: sum(item["current_risk_level"] == level for item in effective_suppliers) for level in ("RED", "YELLOW", "GREEN")}
         tasks: dict[str, int] = {}
         for task in self.list_monitor_tasks():
             if task["supplier_id"] in supplier_set:
                 tasks[task["status"]] = tasks.get(task["status"], 0) + 1
-        with connect(self.database_url) as db:
-            review_rows = db.execute("SELECT supplier_id, human_review_status FROM risk_report").fetchall()
         pending_states = {"PENDING_HUMAN_REVIEW", "EVIDENCE_INSUFFICIENT", "AWAITING_SUPPLIER_REDECLARE"}
         pending_reviews = sum(row["supplier_id"] in supplier_set and row["human_review_status"] in pending_states for row in review_rows)
-        watchlist = sorted(suppliers, key=lambda item: ({"RED": 1, "YELLOW": 2, "GREEN": 3}.get(item["current_risk_level"], 4), 0 if item["importance"] == "IMPORTANT" else 1, item["updated_at"]))[:20]
-        return {"supplier_count_by_risk": levels, "monitor_task_count_by_status": tasks, "pending_review_count": pending_reviews, "watchlist": watchlist}
+        watchlist = sorted(effective_suppliers, key=lambda item: ({"RED": 1, "YELLOW": 2, "GREEN": 3}.get(item["current_risk_level"], 4), -float(item["current_risk_score"]), 0 if item["importance"] == "IMPORTANT" else 1, item["updated_at"]))[:20]
+        analyzed_count = sum(item["risk_state_source"] == "LATEST_RISK_RESULT" for item in effective_suppliers)
+        return {
+            "supplier_count_by_risk": levels,
+            "supplier_analysis_coverage": {
+                "analyzed": analyzed_count,
+                "total": len(effective_suppliers),
+                "pending": len(effective_suppliers) - analyzed_count,
+            },
+            "monitor_task_count_by_status": tasks,
+            "pending_review_count": pending_reviews,
+            "watchlist": watchlist,
+        }
 
     def upsert_notification_rule(self, record: dict[str, Any]) -> dict[str, Any]:
         risk_level = str(record.get("risk_level", ""))

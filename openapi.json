@@ -1544,6 +1544,66 @@
         }
       }
     },
+    "/backend/monitoring/refresh-risk-state": {
+      "post": {
+        "tags": [
+          "backend-foundation"
+        ],
+        "summary": "全量或按供应商刷新数据库风险状态",
+        "description": "Run one-off analyses and persist levels used by the dashboard.\n\nUnlike periodic dispatch, this endpoint does not advance weekly/monthly\nschedules.  Failures are isolated per supplier so a bad record does not\ndiscard successful refreshes for the rest of the batch.",
+        "operationId": "refresh_risk_state_backend_monitoring_refresh_risk_state_post",
+        "parameters": [
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshRiskStateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Refresh Risk State Backend Monitoring Refresh Risk State Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/backend/reports/{report_id}": {
       "get": {
         "tags": [
@@ -4364,6 +4424,83 @@
           "status"
         ],
         "title": "RedeclareReviewRequest"
+      },
+      "RefreshRiskStateRequest": {
+        "properties": {
+          "current_week": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 52.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Week"
+          },
+          "enable_live_llm": {
+            "type": "boolean",
+            "title": "Enable Live Llm",
+            "default": false
+          },
+          "window_unit": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "week",
+                  "month"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Window Unit"
+          },
+          "window_size": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 52.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Window Size"
+          },
+          "supplier_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 1000,
+            "title": "Supplier Ids"
+          },
+          "limit": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "default": 1000
+          },
+          "input_source": {
+            "type": "string",
+            "enum": [
+              "AUTO",
+              "DATABASE",
+              "PROVIDED_DATA"
+            ],
+            "title": "Input Source",
+            "default": "AUTO"
+          }
+        },
+        "type": "object",
+        "title": "RefreshRiskStateRequest"
       },
       "ReviewRecordRequest": {
         "properties": {

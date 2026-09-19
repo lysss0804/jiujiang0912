@@ -52,6 +52,32 @@ X-User-Id: demo-manager
 7. `GET /backend/reports/{report_id}`
 8. `GET /backend/reports/{report_id}/visualization`
 
+## 批量导入后的风险状态刷新
+
+供应商刚导入数据库时风险缓存默认是 `GREEN`。风险事件导入完成后，由有
+`monitor.run` 权限的用户执行一次：
+
+```http
+POST /backend/monitoring/refresh-risk-state
+X-User-Id: demo-admin
+Content-Type: application/json
+
+{"limit":1000,"enable_live_llm":false,"input_source":"AUTO"}
+```
+
+该接口为全部活跃供应商创建一次性 `MANUAL` 分析任务，执行规则引擎并持久化
+`risk_result`、报告和供应商最新风险等级，但不会改变原有周/月监控计划。也可以通过
+`supplier_ids` 只刷新指定供应商。全量刷新默认不调用真实 LLM，避免批量模型费用；
+这不影响规则评分和红黄绿分级。
+
+`input_source=AUTO` 适用于当前联调：数据库已有风险事件时使用数据库快照；如果只有
+供应商名单、尚未把事件导入数据库，则对 `S-ACC134` 等仓库样例供应商读取项目提供的
+`data/source` 数据。生产环境接入真实风险事件后应传 `input_source=DATABASE`。
+
+`GET /backend/dashboard/summary` 会优先使用每家供应商最新的 `risk_result`，并返回
+`supplier_analysis_coverage`。其中 `pending > 0` 表示仍有供应商尚未完成数据库分析，
+前端可以展示“统计计算中/数据未覆盖”，不应把它们误解为已确认的低风险。
+
 所有 JSON 业务响应使用统一外壳：
 
 ```json
