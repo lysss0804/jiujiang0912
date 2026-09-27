@@ -51,6 +51,53 @@ X-User-Id: demo-manager
 6. `GET /backend/suppliers/{supplier_id}/reports`
 7. `GET /backend/reports/{report_id}`
 8. `GET /backend/reports/{report_id}/visualization`
+9. `GET /backend/reports/{report_id}/agent-trace`
+10. `GET /backend/suppliers/{supplier_id}/projects`
+
+## Agent 研判轨迹
+
+```http
+GET /backend/reports/{report_id}/agent-trace
+X-User-Id: demo-leadership
+```
+
+该接口返回六个实际节点：维度归类、风险识别、关联分析、证据、决策建议和一致性校验。
+前端应直接使用 `steps[].llm_status`，不要再设置固定默认状态：
+
+- `SUCCESS`：真实模型调用成功；
+- `FALLBACK`：模型调用失败或输出不合规，已降级为确定性模板；
+- `DISABLED`：本次分析未启用该模型节点；
+- `SKIPPED`：前置证据门禁等条件未满足；
+- `UNKNOWN`：兼容旧报告，旧记录没有保存该节点状态。
+
+`execution_mode` 取值为 `LIVE / DEGRADED / DETERMINISTIC / MIXED`。每个步骤还返回
+真实摘要、证据编号、模型提供方、模型名和持久化节点输出。没有 `audit.read` 权限时
+`output/error_message` 会被裁剪；没有 `report.evidence.read` 权限时证据编号会被裁剪。
+
+前端已有供应商 ID 时，先调用 `GET /backend/suppliers/{supplier_id}/reports`，取首条
+`report_id`，再请求本接口。若供应商尚未生成持久化报告，应展示“暂无研判轨迹”，
+不要使用固定状态补位。
+
+真实模型是否启用由生成该报告时的 `enable_live_llm` 和 `.env` 模型配置共同决定。
+已生成的历史报告不会因后来配置模型而变成 `SUCCESS`，需要重新执行分析。
+
+## 供应商项目与关系图
+
+```http
+GET /backend/suppliers/{supplier_id}/projects
+X-User-Id: demo-leadership
+```
+
+响应同时提供：
+
+- `contracts[]`：合同编号、起止周、合同重要性；
+- `projects[]`：项目编号、名称、阶段和所属合同；
+- `systems[]`：系统编号、名称、等级和所属项目；
+- `graph.nodes[] / graph.edges[]`：ECharts graph 可直接使用的节点与关系边。
+
+当前联调数据来自仓库 `data/source`，不会虚构合同金额或日期；数据源没有的字段不返回。
+所有 ID 已统一为普通连字符，前端无需再处理 `U+2011`。`data_status=NO_DATA` 时应展示
+“暂无项目关系数据”，不要继续显示静态示例。
 
 ## 批量导入后的风险状态刷新
 

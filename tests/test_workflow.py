@@ -147,6 +147,7 @@ def test_disabled_llm_marks_every_node_disabled():
     assert result["consistency_check_result"]["status"] == "DISABLED"
     # 报告中的节点状态映射如实反映
     node_status = result["risk_report"]["llm_node_status"]
+    assert node_status["dimension_mapping"] == "DISABLED"
     assert node_status["risk_identification"] == "DISABLED"
     assert node_status["association_analysis"] == "DISABLED"
     assert node_status["evidence"] == "DISABLED"

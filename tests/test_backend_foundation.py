@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 
 from app.backend.repository import RiskRepository
 from app.backend.api import _provided_data_snapshot
+from app.backend.relationships import supplier_relationships
 from app.service import analyze_supplier_snapshot
 
 
@@ -55,6 +56,17 @@ def test_database_snapshot_runs_agent_and_persists_result(tmp_path) -> None:
     assert summary["supplier_count_by_risk"] == {"RED": 1, "YELLOW": 0, "GREEN": 0}
     assert summary["supplier_analysis_coverage"] == {"analyzed": 1, "total": 1, "pending": 0}
     assert summary["watchlist"][0]["current_risk_score"] > 0
+    trace = repo.report_agent_trace(persisted["report_id"])
+    assert trace["execution_mode"] == "DETERMINISTIC"
+    assert [item["step_name"] for item in trace["steps"]] == [
+        "DIMENSION_MAPPING",
+        "RISK_IDENTIFICATION",
+        "ASSOCIATION_ANALYSIS",
+        "EVIDENCE",
+        "DECISION",
+        "CONSISTENCY_CHECK",
+    ]
+    assert all(item["llm_status"] == "DISABLED" for item in trace["steps"])
 
 
 def test_dashboard_prefers_latest_result_over_stale_supplier_cache(tmp_path) -> None:
@@ -112,6 +124,18 @@ def test_provided_data_snapshot_supports_imported_fixture_supplier() -> None:
         enable_live_llm=False,
     )
     assert state["risk_report"]["risk_grade"]["risk_level"] == "RED"
+
+
+def test_supplier_relationships_returns_projects_and_graph_with_normalized_ids() -> None:
+    payload = supplier_relationships("S-ACC134")
+    assert payload["data_status"] == "DATA"
+    assert payload["supplier"]["supplier_name"] == "ACC服务商134"
+    assert payload["contracts"]
+    assert payload["projects"]
+    assert payload["systems"]
+    assert all("‑" not in node["id"] for node in payload["graph"]["nodes"])
+    node_ids = {node["id"] for node in payload["graph"]["nodes"]}
+    assert all(edge["source"] in node_ids and edge["target"] in node_ids for edge in payload["graph"]["edges"])
 
 
 def test_custom_role_uses_selected_permissions_and_supplier_scope(tmp_path) -> None:

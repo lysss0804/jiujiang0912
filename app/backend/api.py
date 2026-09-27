@@ -20,6 +20,7 @@ from app.backend.document_conversion import convert_docx
 from app.backend.imports import save_upload, validate_event_csv, validate_supplier_csv
 from app.backend.official_api import sync_source
 from app.backend.mock_service import bootstrap_frontend_demo, mock_login
+from app.backend.relationships import supplier_relationships
 from app.data.loader import canonical_supplier_ids, load_supplier_dataset, normalize_supplier_id
 from app.reporting.renderer import render_html, render_markdown
 from app.config import get_settings
@@ -234,6 +235,19 @@ def list_suppliers(raw: Request) -> Any:
 def get_supplier(supplier_id: str, raw: Request) -> Any:
     _authorize(raw, "supplier.read", supplier_id)
     return ok(repository().get_supplier(supplier_id), get_trace_id(raw))
+
+
+@router.get("/suppliers/{supplier_id}/projects", summary="查询供应商合同、项目、系统及关系图")
+def get_supplier_projects(supplier_id: str, raw: Request) -> Any:
+    _authorize(raw, "supplier.read", supplier_id)
+    supplier = repository().get_supplier(supplier_id)
+    payload = supplier_relationships(supplier_id)
+    payload["supplier"] = {
+        "supplier_id": supplier["supplier_id"],
+        "supplier_name": supplier["supplier_name"],
+        "importance": supplier["importance"],
+    }
+    return ok(payload, get_trace_id(raw))
 
 
 @router.get("/suppliers/{supplier_id}/risk-events", summary="查询供应商风险事件")
@@ -563,6 +577,28 @@ def get_report(report_id: str, raw: Request) -> Any:
     return ok(_project_report_for_user(raw, report), get_trace_id(raw))
 
 
+@router.get("/reports/{report_id}/agent-trace", summary="查询真实 Agent 节点状态和研判轨迹")
+def get_report_agent_trace(report_id: str, raw: Request) -> Any:
+    repo = repository()
+    report = repo.get_report(report_id)
+    user_id = _authorize(raw, "report.read", report["supplier_id"])
+    trace_payload = repo.report_agent_trace(report_id)
+    if get_settings().rbac_enforced and user_id:
+        permissions = set(repo.access_profile(user_id)["permissions"])
+        if "report.evidence.read" not in permissions:
+            for step in trace_payload["steps"]:
+                step["evidence_ids"] = []
+                if step["step_name"] in {"EVIDENCE", "DECISION", "CONSISTENCY_CHECK"}:
+                    step["output"] = None
+            trace_payload["evidence_withheld"] = True
+        if "audit.read" not in permissions:
+            for step in trace_payload["steps"]:
+                step["output"] = None
+                step["error_message"] = None
+            trace_payload["detail_withheld"] = True
+    return ok(trace_payload, get_trace_id(raw))
+
+
 @router.get("/reports/{report_id}/visualization", summary="返回六维分布和历史趋势的前端图表数据")
 def get_report_visualization(report_id: str, raw: Request) -> Any:
     report = repository().get_report(report_id)
@@ -741,6 +777,8 @@ def backend_capabilities(raw: Request) -> Any:
             "database_backend": "sqlite" if settings.database_url.startswith("sqlite:///") else "postgresql",
             "rbac_enforced": settings.rbac_enforced,
             "visualizations": ["SIX_DIMENSION_RADAR", "RISK_TREND"],
+            "report_views": ["DETAIL", "VISUALIZATION", "AGENT_TRACE"],
+            "supplier_relationships": ["CONTRACT", "PROJECT", "SYSTEM", "GRAPH"],
             "csv_imports": ["SUPPLIER", "RISK_EVENT"],
             "document_conversion": {"input": ["docx"], "output": ["txt", "markdown", "html"]},
             "source_modes": ["API", "MANUAL_WEB", "MOCK"],

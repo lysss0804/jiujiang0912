@@ -174,6 +174,9 @@ def load_supplier_dataset(source_dir: str | None = None) -> dict[str, Any]:
 
     return {
         "suppliers": suppliers,
+        "contracts": contracts,
+        "projects": projects,
+        "bank_systems": systems,
         "events_by_supplier": events_by_supplier,
         "profile_by_supplier": profile_by_supplier,
         "rectifies_by_supplier": rectifies_by_supplier,

@@ -322,10 +322,11 @@ class RiskRepository:
                 )
                 for hit in grade.get("hit_rules", []):
                     db.execute("INSERT INTO risk_result_rule(risk_result_id, rule_id, rule_description, risk_dimension, severity, weight, is_red_line) VALUES (?, ?, ?, ?, ?, ?, ?)", (result_id, hit["rule_id"], hit["description"], hit.get("category"), hit.get("severity"), hit.get("weight"), int(str(hit["rule_id"]).startswith("RL-"))))
-                ordered = [("RISK_IDENTIFICATION", state.get("risk_identification_result")), ("ASSOCIATION_ANALYSIS", state.get("association_result")), ("EVIDENCE", state.get("evidence_result")), ("DECISION", state.get("llm_advisory")), ("CONSISTENCY_CHECK", state.get("consistency_check_result")), ("HUMAN_REVIEW", state.get("disposition"))]
+                ordered = [("DIMENSION_MAPPING", state.get("dimension_mapping_result")), ("RISK_IDENTIFICATION", state.get("risk_identification_result")), ("ASSOCIATION_ANALYSIS", state.get("association_result")), ("EVIDENCE", state.get("evidence_result")), ("DECISION", state.get("llm_advisory")), ("CONSISTENCY_CHECK", state.get("consistency_check_result")), ("HUMAN_REVIEW", state.get("disposition"))]
                 for index, (name, payload) in enumerate(ordered, start=1):
                     if payload is not None:
-                        db.execute("INSERT INTO agent_step_result(agent_step_result_id, analysis_run_id, step_name, execution_order, status, output_json) VALUES (?, ?, ?, ?, ?, ?)", (_new_id(), analysis_run_id, name, index, str(payload.get("status", "SUCCESS")), json.dumps(payload, ensure_ascii=False)))
+                        step_status = payload.get("llm_status") or payload.get("status") or "SUCCESS"
+                        db.execute("INSERT INTO agent_step_result(agent_step_result_id, analysis_run_id, step_name, execution_order, status, output_json) VALUES (?, ?, ?, ?, ?, ?)", (_new_id(), analysis_run_id, name, index, str(step_status), json.dumps(payload, ensure_ascii=False)))
                 db.execute(
                     """INSERT INTO risk_report(report_id, analysis_run_id, supplier_id, risk_result_id, report_version, human_review_status, disposition_json, candidate_actions_json, report_json)
                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
@@ -567,6 +568,81 @@ class RiskRepository:
         result = dict(row)
         result["report"] = json.loads(result.pop("report_json"))
         return result
+
+    def report_agent_trace(self, report_id: str) -> dict[str, Any]:
+        """Return real persisted/model node statuses with report-derived summaries."""
+        report_row = self.get_report(report_id)
+        report = report_row["report"]
+        with connect(self.database_url) as db:
+            rows = db.execute(
+                """SELECT step_name, execution_order, status, output_json, error_message, created_at
+                   FROM agent_step_result WHERE analysis_run_id=? ORDER BY execution_order""",
+                (report_row["analysis_run_id"],),
+            ).fetchall()
+        persisted = {row["step_name"]: dict(row) for row in rows}
+        status_map = dict(report.get("llm_node_status") or {})
+        evidence_items = report.get("evidence_summary") or []
+        evidence_ids = [
+            str(item.get("evidence_id")) for item in evidence_items
+            if isinstance(item, dict) and item.get("evidence_id")
+        ]
+        definitions = [
+            ("DIMENSION_MAPPING", "dimension_mapping", "维度归类 Agent"),
+            ("RISK_IDENTIFICATION", "risk_identification", "风险识别 Agent"),
+            ("ASSOCIATION_ANALYSIS", "association_analysis", "关联分析 Agent"),
+            ("EVIDENCE", "evidence", "证据 Agent"),
+            ("DECISION", "decision", "决策建议 Agent"),
+            ("CONSISTENCY_CHECK", "consistency_check", "一致性校验 Agent"),
+        ]
+        summaries = {
+            "DIMENSION_MAPPING": f"六维度归类完成，共处理 {sum(int(item.get('event_count', 0)) for item in report.get('dimension_breakdown', []) if isinstance(item, dict))} 条窗口内事件",
+            "RISK_IDENTIFICATION": str(report.get("risk_summary") or "风险识别已完成"),
+            "ASSOCIATION_ANALYSIS": str(report.get("association_summary") or (report.get("risk_trend") or {}).get("trend_desc") or "关联分析已完成"),
+            "EVIDENCE": f"已关联并校验 {len(evidence_ids)} 条证据",
+            "DECISION": str(report.get("recommendation") or "候选处置建议已生成"),
+            "CONSISTENCY_CHECK": str((report.get("consistency_check") or {}).get("notes") or "一致性校验结果见节点输出"),
+        }
+        steps: list[dict[str, Any]] = []
+        for order, (step_name, status_key, agent_name) in enumerate(definitions, start=1):
+            row = persisted.get(step_name)
+            output = json.loads(row["output_json"]) if row and row.get("output_json") else None
+            llm_status = status_map.get(status_key) or (row.get("status") if row else None) or "UNKNOWN"
+            step_evidence = evidence_ids if step_name in {"EVIDENCE", "DECISION", "CONSISTENCY_CHECK"} else []
+            steps.append(
+                {
+                    "step_name": step_name,
+                    "agent_name": agent_name,
+                    "execution_order": int(row["execution_order"]) if row else order,
+                    "llm_status": str(llm_status),
+                    "summary": summaries[step_name],
+                    "evidence_ids": step_evidence,
+                    "model_provider": output.get("provider") if isinstance(output, dict) else None,
+                    "model_name": output.get("model") if isinstance(output, dict) else None,
+                    "output": output,
+                    "error_message": row.get("error_message") if row else None,
+                    "created_at": row.get("created_at") if row else report.get("generated_at"),
+                }
+            )
+        statuses = [item["llm_status"] for item in steps]
+        if "FALLBACK" in statuses:
+            mode = "DEGRADED"
+        elif "SUCCESS" in statuses:
+            mode = "LIVE"
+        elif all(item in {"DISABLED", "SKIPPED", "UNKNOWN"} for item in statuses):
+            mode = "DETERMINISTIC"
+        else:
+            mode = "MIXED"
+        counts = {status: statuses.count(status) for status in sorted(set(statuses))}
+        return {
+            "report_id": report_id,
+            "analysis_run_id": report_row["analysis_run_id"],
+            "supplier_id": report_row["supplier_id"],
+            "run_id": report.get("run_id"),
+            "generated_at": report.get("generated_at"),
+            "execution_mode": mode,
+            "status_summary": counts,
+            "steps": steps,
+        }
 
     def report_visualization(self, report_id: str) -> dict[str, Any]:
         report_row = self.get_report(report_id)

@@ -113,6 +113,64 @@
         }
       }
     },
+    "/backend/suppliers/{supplier_id}/projects": {
+      "get": {
+        "tags": [
+          "backend-foundation"
+        ],
+        "summary": "查询供应商合同、项目、系统及关系图",
+        "operationId": "get_supplier_projects_backend_suppliers__supplier_id__projects_get",
+        "parameters": [
+          {
+            "name": "supplier_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Supplier Id"
+            }
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Get Supplier Projects Backend Suppliers  Supplier Id  Projects Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/backend/suppliers/{supplier_id}/risk-events": {
       "get": {
         "tags": [
@@ -1645,6 +1703,64 @@
               "application/json": {
                 "schema": {
                   "title": "Response Get Report Backend Reports  Report Id  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/backend/reports/{report_id}/agent-trace": {
+      "get": {
+        "tags": [
+          "backend-foundation"
+        ],
+        "summary": "查询真实 Agent 节点状态和研判轨迹",
+        "operationId": "get_report_agent_trace_backend_reports__report_id__agent_trace_get",
+        "parameters": [
+          {
+            "name": "report_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Report Id"
+            }
+          },
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Get Report Agent Trace Backend Reports  Report Id  Agent Trace Get"
                 }
               }
             }

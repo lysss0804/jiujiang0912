@@ -124,6 +124,10 @@ def _collect_llm_node_status(state: dict) -> dict[str, str]:
     """
     statuses: dict[str, str] = {}
 
+    mapping = state.get("dimension_mapping_result", {}) or {}
+    if mapping.get("status"):
+        statuses["dimension_mapping"] = str(mapping["status"])
+
     advisory = state.get("llm_advisory", {}) or {}
     if advisory.get("status"):
         statuses["decision"] = str(advisory["status"])
