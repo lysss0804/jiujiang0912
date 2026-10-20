@@ -10,7 +10,7 @@ from typing import Any, Literal
 from pathlib import Path
 
 from fastapi import APIRouter, File, Header, Query, Request, UploadFile
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel, Field
 
 from app.api.deps import ForbiddenError, get_trace_id
@@ -23,6 +23,7 @@ from app.backend.mock_service import bootstrap_frontend_demo, mock_login
 from app.backend.relationships import supplier_relationships
 from app.data.loader import canonical_supplier_ids, load_supplier_dataset, normalize_supplier_id
 from app.reporting.renderer import render_html, render_markdown
+from app.reporting.pdf_renderer import render_pdf
 from app.config import get_settings
 from app.service import analyze_supplier_snapshot
 
@@ -599,6 +600,38 @@ def get_report_agent_trace(report_id: str, raw: Request) -> Any:
     return ok(trace_payload, get_trace_id(raw))
 
 
+@router.get(
+    "/reports/{report_id}/pdf",
+    summary="下载完整供应商风险报告 PDF",
+    response_class=Response,
+    responses={200: {"content": {"application/pdf": {}}}},
+)
+def download_report_pdf(report_id: str, raw: Request) -> Response:
+    repo = repository()
+    report_row = repo.get_report(report_id)
+    user_id = _authorize(raw, "report.export", report_row["supplier_id"])
+    projected = _project_report_for_user(raw, report_row)["report"]
+    projected["report_id"] = report_id
+    content = render_pdf(projected)
+    safe_report_id = "".join(char for char in report_id if char.isalnum() or char in {"-", "_"}) or "report"
+    repo.audit(
+        actor_user_id=user_id,
+        action="EXPORT_REPORT_PDF",
+        resource_type="REPORT",
+        resource_id=report_id,
+        trace_id=get_trace_id(raw),
+        after={"content_type": "application/pdf", "file_size": len(content)},
+    )
+    return Response(
+        content=content,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="risk-report-{safe_report_id}.pdf"',
+            "Content-Length": str(len(content)),
+        },
+    )
+
+
 @router.get("/reports/{report_id}/visualization", summary="返回六维分布和历史趋势的前端图表数据")
 def get_report_visualization(report_id: str, raw: Request) -> Any:
     report = repository().get_report(report_id)
@@ -777,7 +810,7 @@ def backend_capabilities(raw: Request) -> Any:
             "database_backend": "sqlite" if settings.database_url.startswith("sqlite:///") else "postgresql",
             "rbac_enforced": settings.rbac_enforced,
             "visualizations": ["SIX_DIMENSION_RADAR", "RISK_TREND"],
-            "report_views": ["DETAIL", "VISUALIZATION", "AGENT_TRACE"],
+            "report_views": ["DETAIL", "VISUALIZATION", "AGENT_TRACE", "PDF"],
             "supplier_relationships": ["CONTRACT", "PROJECT", "SYSTEM", "GRAPH"],
             "csv_imports": ["SUPPLIER", "RISK_EVENT"],
             "document_conversion": {"input": ["docx"], "output": ["txt", "markdown", "html"]},

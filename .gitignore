@@ -10,6 +10,8 @@ __pycache__/
 pytest-cache-files-*/
 .coverage
 htmlcov/
+tmp/
+output/pdf/*.pdf
 logs/*.log
 *.db
 *.db-shm

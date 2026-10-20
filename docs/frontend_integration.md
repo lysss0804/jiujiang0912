@@ -53,6 +53,35 @@ X-User-Id: demo-manager
 8. `GET /backend/reports/{report_id}/visualization`
 9. `GET /backend/reports/{report_id}/agent-trace`
 10. `GET /backend/suppliers/{supplier_id}/projects`
+11. `GET /backend/reports/{report_id}/pdf`
+
+## PDF 报告下载
+
+```http
+GET /backend/reports/{report_id}/pdf
+X-User-Id: demo-leadership
+```
+
+接口直接返回 `application/pdf` 文件流，并通过 `Content-Disposition: attachment`
+提供下载文件名。该接口要求 `report.export` 权限，同时沿用报告详情接口的证据与
+审计字段裁剪规则，避免通过 PDF 绕过权限控制。
+
+前端 Axios 调用必须设置二进制响应类型：
+
+```javascript
+const response = await axios.get(`/api/backend/reports/${reportId}/pdf`, {
+  responseType: 'blob'
+})
+const url = URL.createObjectURL(response.data)
+const link = document.createElement('a')
+link.href = url
+link.download = `risk-report-${reportId}.pdf`
+link.click()
+URL.revokeObjectURL(url)
+```
+
+PDF 包含报告头、供应商信息、风险等级与命中规则、六维雷达图和分数明细、
+证据链、候选处置建议及人工复核状态。
 
 ## Agent 研判轨迹
 
