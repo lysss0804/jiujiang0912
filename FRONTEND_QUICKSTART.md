@@ -86,7 +86,26 @@ VITE_API_BASE_URL=http://127.0.0.1:8000
 
 完整接口与权限说明见 `docs/frontend_integration.md` 和 Swagger。
 
-## 6. 当前联调边界
+## 6. 重建源事件与全量分析
+
+需要恢复仓库自带的 589 条风险事件时，在后端仓库根目录依次执行：
+
+```powershell
+python scripts/clear_analysis_data.py --yes
+python scripts/import_events.py --replace-all-events
+```
+
+第二条命令会自动补齐 `data/source/suppliers.csv` 中尚未入库的供应商，将旧字段和旧事件类别转换为后端六维字段，并以单事务导入。源文件缺少统一社会信用代码，脚本会使用显式的 `SOURCE-DATA-*` 占位值，后续可由官方数据覆盖。
+
+也可以先通过 multipart 接口预检，不写入事件：
+
+```bash
+curl -X POST "http://127.0.0.1:8000/backend/imports/risk-events/csv?confirm=false" -F "file=@data/source/risk_events.csv;type=text/csv"
+```
+
+确认 `error_count` 为 0 后将 `confirm` 改为 `true`。完成导入后，使用 `POST /backend/monitoring/refresh-risk-state`，并明确传入 `"input_source":"DATABASE"` 执行全量刷新。
+
+## 7. 当前联调边界
 
 - Mock 登录返回的 token 不是生产 JWT；生产环境需接 SSO/JWT。
 - 本地数据存入 `data/jiujiang_backend.db`，上传文件存入 `data/uploads/`，两者均不提交 Git。

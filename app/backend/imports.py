@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
+from app.agents.dimension_mapping import alias_dimension, load_dimension_alias
 from app.backend.repository import DIMENSIONS, IMPORTANCE, RiskRepository, normalize_supplier_id
 
 
@@ -36,6 +37,11 @@ EVENT_HEADERS = {
     "证据摘要": "evidence_content", "evidence_content": "evidence_content",
     "证据链接": "source_url", "source_url": "source_url",
     "涉及金额": "amount", "amount": "amount",
+    # 兼容算法侧历史数据集字段。读取后统一转换成后端六维字段，
+    # 这样同一份 CSV 既可供智能体离线分析，也可直接入库。
+    "事件类别": "event_category", "event_category": "event_category",
+    "事件子类型": "event_subtype", "event_subtype": "event_subtype",
+    "事件严重程度": "event_severity", "event_severity": "event_severity",
 }
 
 
@@ -82,8 +88,19 @@ def validate_supplier_csv(content: bytes) -> tuple[list[dict[str, Any]], list[di
 def validate_event_csv(content: bytes) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     valid: list[dict[str, Any]] = []
     errors: list[dict[str, Any]] = []
+    alias = load_dimension_alias()
     for row_number, row in enumerate(_read_rows(content, EVENT_HEADERS), start=2):
         row["supplier_id"] = normalize_supplier_id(row.get("supplier_id", ""))
+        if not row.get("risk_dimension") and row.get("event_category"):
+            row["risk_dimension"] = alias_dimension(row, alias)
+        row["risk_type"] = row.get("risk_type") or row.get("event_subtype", "")
+        row["risk_description"] = (
+            row.get("risk_description") or row.get("event_subtype", "") or row.get("risk_type", "")
+        )
+        row["severity"] = row.get("severity") or row.get("event_severity", "")
+        # 历史文件没有独立来源记录号，证据编号在该数据集中稳定且唯一，
+        # 可作为幂等导入时的来源键。
+        row["source_record_id"] = row.get("source_record_id") or row.get("evidence_id", "")
         try:
             if not row.get("event_week") and row.get("event_date"):
                 row["event_week"] = date.fromisoformat(row["event_date"]).isocalendar().week

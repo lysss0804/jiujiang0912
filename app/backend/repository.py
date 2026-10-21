@@ -9,6 +9,7 @@ from typing import Any
 from uuid import uuid4
 
 from app.backend.database import connect, initialize
+from app.agents.dimension_mapping import alias_dimension, load_dimension_alias
 
 
 DIMENSIONS = {"公司背景", "司法", "失信", "经营风险", "经营状况", "知识产权"}
@@ -129,6 +130,7 @@ class RiskRepository:
             raise ValueError("risk event records must not be empty")
         batch_id, data_version = _new_id(), f"import-{_now().strftime('%Y%m%d%H%M%S')}"
         event_ids: list[str] = []
+        alias = load_dimension_alias()
         with connect(self.database_url) as db:
             db.execute("BEGIN")
             try:
@@ -140,7 +142,9 @@ class RiskRepository:
                     supplier_id = normalize_supplier_id(str(record.get("supplier_id", "")))
                     if not db.execute("SELECT 1 FROM supplier WHERE supplier_id = ?", (supplier_id,)).fetchone():
                         raise ValueError(f"unknown supplier_id: {supplier_id}")
-                    dimension = str(record.get("risk_dimension") or record.get("event_category") or "").strip()
+                    dimension = str(record.get("risk_dimension") or "").strip()
+                    if not dimension and record.get("event_category"):
+                        dimension = alias_dimension(record, alias)
                     if dimension not in DIMENSIONS:
                         raise ValueError(f"invalid risk_dimension: {dimension}")
                     severity, week = int(record.get("severity", record.get("event_severity", -1))), int(record.get("event_week", -1))
